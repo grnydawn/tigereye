@@ -5,10 +5,8 @@ from __future__ import (absolute_import, division,
     print_function, unicode_literals)
 
 from .error import UsageError
-from .util import error_exit, teye_eval, teye_exec, temp_attrs
-
-def _pages_args(num_pages, page_names=None, pdf_merge=None):
-    return num_pages, page_names, pdf_merge
+from .util import (error_exit, teye_eval, teye_exec, temp_attrs,
+    parse_kwargs)
 
 def gen_plot(args, attrs):
 
@@ -115,60 +113,48 @@ def gen_plot(args, attrs):
             arglist = saveargs.split(',', 1)
             if '_pdf_merge' in attrs:
                 if '_pdf_pages' not in attrs:
-                    attrs['_pdf_pages'] = attrs['_pdf_merge'](arglist[0])
-                #teye_exec('_pdf_pages.savefig(%s)'%''.join(arglist[1:]), l=attrs)
+                    teye_exec('_pdf_pages = _pdf_merge(%s)'%arglist[0], l=attrs)
                 teye_exec('_pdf_pages.savefig()', l=attrs)
             else:
                 teye_exec('pyplot.savefig(%s)'%saveargs, l=attrs)
-
-            #from matplotlib.backends.backend_pdf import PdfPages
-            #attrs['_pdf_merge'] = PdfPages
 
     # displyaing an image on screen
     if not args.noshow:
         attrs['pyplot'].show()
 
-def gen_figure(args, attrs):
-
-    # figure setting
-    if args.figure:
-        attrs['figure'] = teye_eval('pyplot.figure(%s)'%args.figure, l=attrs)
-    else:
-        attrs['figure'] = attrs['pyplot'].figure()
-
-    # plot axis
-    attrs['_ax'] = attrs['figure'].add_subplot(111)
+def teye_plot(args, attrs):
 
     # pages setting
     if args.pages:
-        pnum, pnames, pdfmerge = teye_eval('_p(%s)'%args.pages,
-            l=temp_attrs(attrs, [('_p', _pages_args)]))
-        attrs['num_pages'] = int(pnum)
-        if pnames:
-            attrs['page_names'] = pnames
-        if pdfmerge:
-            attrs['_pdf_merge'] = pdfmerge
+        arglist = args.pages.split(',', 1)
+        attrs['num_pages'] = int(arglist[0])
+        if len(arglist) > 1:
+            page_args = parse_kwargs({}, arglist[1], attrs)
+            if 'page_names' in page_args:
+                attrs['page_names'] = page_args['page_names']
+            if 'pdf_merge' in page_args and page_args['pdf_merge']:
+                from matplotlib.backends.backend_pdf import PdfPages
+                attrs['_pdf_merge'] = PdfPages
     else:
         attrs['num_pages'] = 1
 
-def teye_plot(args, attrs):
+    for idx in range(attrs['num_pages']):
 
-    # figure and multi-page setting
-    gen_figure(args, attrs)
+        attrs['page_num'] = idx
 
-    # page creation
-    for pagenum in range(attrs['num_pages']):
+        # figure setting
+        if args.figure:
+            attrs['figure'] = teye_eval('pyplot.figure(%s)'%args.figure, l=attrs)
+        else:
+            attrs['figure'] = attrs['pyplot'].figure()
 
-        attrs['page_num'] = pagenum
+        # plot axis
+        attrs['_ax'] = attrs['figure'].add_subplot(111)
 
-        # plotting
         gen_plot(args, attrs)
 
-        attrs['pyplot'].cla()
+        attrs['pyplot'].close()
 
     # multi-page closing
     if '_pdf_pages' in attrs:
         attrs['_pdf_pages'].close()
-
-    attrs['pyplot'].close()
-

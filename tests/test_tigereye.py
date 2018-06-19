@@ -64,7 +64,8 @@ def test_csv_file():
         "--data-format", "csv, delimiter=';'",
         #"--calc", "y = y**2",
         #"--printvar", "x",
-        #"--pages", "2, pdf_merge=true",
+        "--pages", "2",
+        #"--pages", "2, pdf_merge=True",
         #"--noplot",
         "--save", "'test.pdf'",
 

@@ -80,3 +80,12 @@ def temp_attrs(attrs, add_attrs):
     new_attrs = dict(attrs)
     new_attrs.update(add_attrs)
     return new_attrs
+
+def parse_kwargs(kwdefaults, kwargs_str, attrs):
+
+    def _parse(**kw_str):
+        return kw_str
+
+    kwargs = teye_eval('_p(%s)'%kwargs_str, l=temp_attrs(attrs, [('_p', _parse)]))
+    kwdefaults.update(kwargs)
+    return kwdefaults
