@@ -3,8 +3,10 @@
 
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
-
+import sys
 import re
+
+from .util import teye_eval, teye_exec, _DEBUG
 
 _re_did = re.compile(r'(?P<did>d\d+)(?P<others>.*)')
 
@@ -31,6 +33,27 @@ def teye_var(args, attrs):
                     handler = attrs['_build_handlers']['numpybuild']()
                     handler.get_data(vname, formula[6:].strip(), attrs)
                 else:
-                    raise Exception('Unknown %s argument format: %s'%(
-                        vname, formula))
+                    try:
+                        attrs[vname] = teye_eval(formula, l=attrs)
+                    except:
+                        raise Exception('Unknown %s argument format: %s'%(
+                            vname, formula))
+
+    if args.calc:
+        for calc in args.calc:
+            teye_exec(calc, l=attrs)
+
+    if args.printvar:
+        for pvar in args.printvar:
+            pvarlist = pvar.split(',', 1)
+            #if len(pvarlist)==2 and pvarlist[1].strip():
+            #    exec("np.set_printoptions(%s)"%pvarlist[1])
+
+            print("%s = %s"%(pvarlist[0], str(attrs[pvarlist[0]])))
+
+    if args.noplot:
+        if _DEBUG:
+            attrs['return'] = 1
+        else:
+            attrs['return'] = 0
 

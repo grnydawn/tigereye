@@ -2,6 +2,10 @@
 """tigereye main module."""
 from __future__ import absolute_import
 
+# TODO: --page-template, like function
+# TODO: --data-template, line function
+# TODO: may put PdfPages on module level?
+
 # import tigereye features
 from .util import support_message, error_exit
 from .error import InternalError, UsageError
@@ -15,13 +19,15 @@ def main(argv):
     try:
 
         # plotting attributes
-        attrs = {}
+        attrs = {'max': max}
 
         # import core libraries
+        import csv
         import numpy
         import matplotlib.pyplot as plt
-        attrs['pyplot'] = plt
+        attrs['csv'] = csv
         attrs['numpy'] = numpy
+        attrs['pyplot'] = plt
 
         # argument and template processing
         args = teye_parse(argv, attrs)
@@ -31,6 +37,10 @@ def main(argv):
 
         # plotting variables
         teye_var(args, attrs)
+
+        # exit if noplot option exists
+        if 'return' in attrs:
+            return attrs['return']
 
         # plot generation
         teye_plot(args, attrs)

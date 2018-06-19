@@ -4,6 +4,7 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 
+import os
 import shlex
 import abc
 
@@ -53,12 +54,15 @@ class Data(object):
 
     __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
     def __getitem__(self, key):
+        return self.data[key]
+
+    @abc.abstractmethod
+    def _lib_item(self, vname, cmd, attrs):
         pass
 
     @abc.abstractmethod
-    def _lib_func(self, vname, data, cmd, params, attrs):
+    def _lib_func(self, vname, cmd, params, attrs):
         pass
 
     def get_data(self, vname, arg, attrs):
@@ -70,9 +74,9 @@ class Data(object):
         while arg:
             cmd, params, arg = self._parse_arg(arg)
             if cmd[0] == '[' and cmd[-1] == ']':
-                data = data[teye_eval(cmd[1:-1], l=attrs)]
+                data = self._lib_item(vname, cmd, attrs)
             else:
-                data = self._lib_func(vname, data, cmd, params, attrs)
+                data = self._lib_func(vname, cmd, params, attrs)
             if self.data is None:
                 self.data = data
             if vname:
@@ -119,24 +123,33 @@ class Data(object):
 
         return ''.join(cmd), ''.join(params), ''.join(others)
 
+# handler types
+
 class FileData(Data):
     pass
+    #def _normalize_filepath(self, path):
+    #    if path or path[0] not in ('"', "'") or path[0] != path[-1]:
+    #        path = "'%s'"%path
+    #    return path
 
 class ValueData(Data):
     pass
 
+
+# mixins
+
 class BuildMixin(object):
 
     def __init__(self):
-        self. data = None
+        self.data = None
 
-class NumpyData(ValueData):
+class NumpyMixin(object):
 
-    def __getitem__(self, key):
-        return self.data[key]
+    def _lib_item(self, vname, cmd, attrs):
+        return teye_eval(vname+cmd, l=attrs)
 
-    def _lib_func(self, vname, data, cmd, params, attrs):
-        import numpy as func
+    def _lib_func(self, vname, cmd, params, attrs):
+        func = attrs['numpy']
         for name in cmd.split('~'):
             func = getattr(func, name)
         newattrs = temp_attrs(attrs, [('_f_', func)])
@@ -146,7 +159,10 @@ class NumpyData(ValueData):
         else:
             return newattrs[vname]
 
-class NumpyArrayData(NumpyData):
+
+# numpy handlers
+
+class NumpyArrayData(NumpyMixin, ValueData):
 
     name = 'numpyarray'
 
@@ -156,11 +172,40 @@ class NumpyArrayData(NumpyData):
         else:
             self.data = teye_eval('numpy.asarray(%s)'%datasrc, l=attrs)
 
-class NumpyBuildData(NumpyData, BuildMixin):
+class NumpyBuildData(NumpyMixin, BuildMixin, ValueData):
 
     name = 'numpybuild'
 
-# handlers
+
+class NumpyTextData(NumpyMixin, FileData):
+
+    name = 'numpytext'
+
+    def __init__(self, datasrc, args, attrs):
+
+        if os.path.isfile(datasrc):
+            kwargs = ''
+            if args:
+                kwargs = ', %s'%args
+            self.data = teye_eval("numpy.genfromtxt('%s'%s)"%(datasrc, kwargs), l=attrs)
+        else:
+            error_exit("Input argument syntax error: '%s, %s'"%(datasrc, args))
+
+class CsvTextData(NumpyMixin, FileData):
+
+    name = 'csv'
+
+    def __init__(self, datasrc, args, attrs):
+
+        if os.path.isfile(datasrc):
+            kwargs = ', dtype=object'
+            if args:
+                kwargs += ', %s'%args
+            self.data = teye_eval("numpy.genfromtxt('%s'%s)"%(datasrc, kwargs), l=attrs)
+        else:
+            error_exit("Input argument syntax error: '%s, %s'"%(datasrc, args))
+
+# handler groups
 _file_format_handlers = list(
     cls for cls in _subclasses(FileData) if hasattr(cls, 'name'))
 _value_format_handlers = list(
@@ -171,7 +216,6 @@ _data_handlers = dict(
     (cls.name, cls) for cls in _subclasses(Data) if hasattr(cls, 'name'))
 
 def _select_srcfmt(datasrc, attrs):
-    import os
     if os.path.isfile(datasrc):
         for cls in _file_format_handlers:
             try:
@@ -214,8 +258,7 @@ def teye_load(args, attrs):
                     handler_name = fmt[:comma].replace(' ', '')
                     global_fmt = (_data_handlers[handler_name], fmt[comma+1:])
                 else:
-                    handler_name = fmt[:comma].replace(' ', '')
-                    global_fmt = (_data_handlers[handler_name], None)
+                    global_fmt = (_data_handlers[fmt], None)
 
             except:
                 print('Warning: source format syntax error (ignored): %s'%fmt)

@@ -116,9 +116,13 @@ def gen_plot(args, attrs):
             if '_pdf_merge' in attrs:
                 if '_pdf_pages' not in attrs:
                     attrs['_pdf_pages'] = attrs['_pdf_merge'](arglist[0])
-                teye_exec('_pdf_pages.savefig(%s)'%''.join(arglist[1:]), l=attrs)
+                #teye_exec('_pdf_pages.savefig(%s)'%''.join(arglist[1:]), l=attrs)
+                teye_exec('_pdf_pages.savefig()', l=attrs)
             else:
                 teye_exec('pyplot.savefig(%s)'%saveargs, l=attrs)
+
+            #from matplotlib.backends.backend_pdf import PdfPages
+            #attrs['_pdf_merge'] = PdfPages
 
     # displyaing an image on screen
     if not args.noshow:
@@ -143,8 +147,7 @@ def gen_figure(args, attrs):
         if pnames:
             attrs['page_names'] = pnames
         if pdfmerge:
-            from matplotlib.backends.backend_pdf import PdfPages
-            attrs['_pdf_merge'] = PdfPages
+            attrs['_pdf_merge'] = pdfmerge
     else:
         attrs['num_pages'] = 1
 
@@ -164,8 +167,8 @@ def teye_plot(args, attrs):
         attrs['pyplot'].cla()
 
     # multi-page closing
-    if '_pdf_merge' in attrs:
-        attrs['_pdf_merge'].close()
+    if '_pdf_pages' in attrs:
+        attrs['_pdf_pages'].close()
 
     attrs['pyplot'].close()
 
