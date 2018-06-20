@@ -43,13 +43,10 @@ def teye_var(args, attrs):
         for calc in args.calc:
             teye_exec(calc, l=attrs)
 
-    if args.printvar:
-        for pvar in args.printvar:
-            pvarlist = pvar.split(',', 1)
-            #if len(pvarlist)==2 and pvarlist[1].strip():
-            #    exec("np.set_printoptions(%s)"%pvarlist[1])
-
-            print("%s = %s"%(pvarlist[0], str(attrs[pvarlist[0]])))
+    if args.value:
+        for pval in args.value:
+            val = teye_eval(pval, l=attrs)
+            print("Value of '%s' = %s"%(pval, str(val)))
 
     if args.noplot:
         if _DEBUG:

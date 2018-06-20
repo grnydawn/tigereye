@@ -33,6 +33,11 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     description="Template-based data plotter",
+    entry_points={
+        'console_scripts': [
+            'tigereye=tigereye.tigereye:entry',
+        ],
+    },
     install_requires=requirements,
     license="MIT license",
     long_description=readme + '\n\n' + history,

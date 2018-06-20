@@ -4,7 +4,6 @@ from __future__ import absolute_import
 
 # TODO: --page-template, like function
 # TODO: --data-template, line function
-# TODO: may put PdfPages on module level?
 
 # import tigereye features
 from .util import support_message, error_exit
@@ -13,6 +12,10 @@ from .parse import teye_parse
 from .load import teye_load
 from .var import teye_var
 from .plot import teye_plot
+
+def entry():
+    import sys
+    return main(sys.argv[1:])
 
 def main(argv):
 

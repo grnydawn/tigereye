@@ -4,9 +4,20 @@
 from __future__ import (absolute_import, division,
     print_function, unicode_literals)
 
+import re
+
 from .error import UsageError
 from .util import (error_exit, teye_eval, teye_exec, temp_attrs,
     parse_kwargs)
+
+_re_ax = re.compile(r'(?P<ax>ax\d*)\s*:\s*(?P<others>.*)')
+
+def _get_axis(arg):
+    match = _re_ax.match(arg)
+    if match:
+        return match.group('ax'), match.group('others')
+    else:
+        return 'ax', arg
 
 def gen_plot(args, attrs):
 
@@ -25,14 +36,16 @@ def gen_plot(args, attrs):
     plot_labels = []
     if args.plot:
         for plot in args.plot:
-            plotarg = plot.strip()
+
+            ax, plotarg = _get_axis(plot)
+
             poscomma = plotarg.find(',')
             if poscomma<0:
                 raise UsageError('Wrong plot option: %s'%plotarg)
             else:
                 pname = plotarg[:poscomma]
                 pargs = plotarg[poscomma+1:]
-                plot_handle = teye_eval('_ax.%s(%s)'%(pname, pargs), l=attrs)
+                plot_handle = teye_eval('%s.%s(%s)'%(ax, pname, pargs), l=attrs)
 
                 try:
                     for p in plot_handle:
@@ -49,63 +62,65 @@ def gen_plot(args, attrs):
                         plot_labels.append('N/A')
 
                 if pname == 'pie':
-                    attrs['_ax'].axis('equal')
+                    attrs[ax].axis('equal')
     else:
         if len(attrs['_data_objects']) > 0:
             for data_obj in attrs['_data_objects']:
-                attrs['_ax'].plot(data_obj.get_data('', '', attrs))
+                attrs['ax'].plot(data_obj.get_data('', '', attrs))
         else:
-            error_exit("No plot is specified with -p or --plot flag.")
+            error_exit("There is no data to plot.")
     attrs['plots'] = plots
     attrs['plot_labels'] = plot_labels
 
     # title setting
-    if args.title:
-        title = args.title.format(**attrs)
-        teye_exec('_ax.set_title(%s)'%title, l=attrs)
+    #if args.title:
+    for title_arg in args.title:
+        ax, targ = _get_axis(title_arg)
+        title = targ.format(**attrs)
+        teye_exec('%s.set_title(%s)'%(ax, title), l=attrs)
 
-    # x _ax.s setting
+    # x ax.s setting
     if args.xlim:
-        teye_exec('_ax.set_xlim(%s)'%args.xlim, l=attrs)
+        teye_exec('ax.set_xlim(%s)'%args.xlim, l=attrs)
 
     if args.xlabel:
         xlabel = args.xlabel.format(**attrs)
-        teye_exec('_ax.set_xlabel(%s)'%xlabel, l=attrs)
+        teye_exec('ax.set_xlabel(%s)'%xlabel, l=attrs)
 
     if args.xticks:
-        teye_exec('pyplot.xticks(%s)'%args.xticks, l=attrs)
+        teye_exec('ax.xticks(%s)'%args.xticks, l=attrs)
 
     if args.xtick_style:
         for xtick_style in args.xtick_style:
             if len(xtick_style.strip())==0: continue
             locs, labels = pyplot.xticks()
-            teye_exec('pyplot.xticks(locs, %s)'%xtick_style, l=attrs)
+            teye_exec('ax.xticks(locs, %s)'%xtick_style, l=attrs)
 
-    # y _ax.s setting
+    # y ax.s setting
     if args.ylim:
-        teye_exec('_ax.set_ylim(%s)'%args.ylim, l=attrs)
+        teye_exec('ax.set_ylim(%s)'%args.ylim, l=attrs)
 
     if args.ylabel:
         ylabel = args.ylabel.format(**attrs)
-        teye_exec('_ax.set_ylabel(%s)'%ylabel, l=attrs)
+        teye_exec('ax.set_ylabel(%s)'%ylabel, l=attrs)
 
     if args.yticks:
-        teye_exec('pyplot.yticks(%s)'%args.yticks, l=attrs)
+        teye_exec('ax.yticks(%s)'%args.yticks, l=attrs)
 
     if args.ytick_style:
         for ytick_style in args.ytick_style:
             if len(ytick_style.strip())==0: continue
             locs, labels = pyplot.yticks()
-            teye_exec('pyplot.yticks(locs, %s)'%ytick_style, l=attrs)
+            teye_exec('ax.yticks(locs, %s)'%ytick_style, l=attrs)
 
     # grid setting
     if args.grid:
         for g in args.grid:
-            teye_exec('_ax.grid(%s)'%g, l=attrs)
+            teye_exec('ax.grid(%s)'%g, l=attrs)
 
     # legend setting 
     if args.legend:
-        teye_exec('pyplot.legend(%s)'%args.legend, l=attrs)
+        teye_exec('ax.legend(%s)'%args.legend, l=attrs)
 
     # saving an image file
     if args.save:
@@ -148,8 +163,17 @@ def teye_plot(args, attrs):
         else:
             attrs['figure'] = attrs['pyplot'].figure()
 
+
         # plot axis
-        attrs['_ax'] = attrs['figure'].add_subplot(111)
+        if args.axis:
+            for axis_arg in args.axis:
+                ax, others = _get_axis(axis_arg)
+                if ax:
+                    attrs[ax] = teye_eval('figure.add_subplot(%s)'%others, l=attrs)
+                else:
+                    raise UsageError('Wrong axis option: %s'%axis_arg)
+        else:
+            attrs['ax'] = attrs['figure'].add_subplot(111)
 
         gen_plot(args, attrs)
 
