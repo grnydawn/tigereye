@@ -11,6 +11,7 @@ from .util import (error_exit, teye_eval, teye_exec, temp_attrs,
     parse_kwargs)
 
 _re_ax = re.compile(r'(?P<ax>ax\d*)\s*:\s*(?P<others>.*)')
+_re_name = re.compile(r'(?P<name>\w+)\s*,?\s*(?P<others>.*)')
 
 def _get_axis(arg):
     match = _re_ax.match(arg)
@@ -19,21 +20,18 @@ def _get_axis(arg):
     else:
         return 'ax', arg
 
-def gen_plot(args, attrs):
+def _get_name(arg):
 
-    # page names
-    if 'page_names' in attrs:
-        page_names = attrs['page_names']
-        if callable(page_names):
-            attrs['page_name'] = page_names(attrs['page_num'])
-        else:
-            attrs['page_name'] = page_names[attrs['page_num']]
+    match = _re_name.match(arg)
+    if match:
+        return match.group('name'), match.group('others')
     else:
-        attrs['page_name'] = 'page%d'%(attrs['page_num'] + 1)
+        return '', arg
+
+def gen_plot(args, attrs):
 
     # plotting
     plots = []
-    plot_labels = []
     if args.plot:
         for plot in args.plot:
 
@@ -50,94 +48,78 @@ def gen_plot(args, attrs):
                 try:
                     for p in plot_handle:
                         plots.append(p)
-                        if hasattr(p, 'get_label'):
-                            plot_labels.append(p.get_label())
-                        else:
-                            plot_labels.append('N/A')
                 except TypeError:
                     plots.append(plot_handle)
-                    if hasattr(plot_handle, 'get_label'):
-                        plot_labels.append(plot_handle.get_label())
-                    else:
-                        plot_labels.append('N/A')
 
                 if pname == 'pie':
                     attrs[ax].axis('equal')
-    else:
-        if len(attrs['_data_objects']) > 0:
-            for data_obj in attrs['_data_objects']:
-                attrs['ax'].plot(data_obj.get_data('', '', attrs))
-        else:
-            error_exit("There is no data to plot.")
+
     attrs['plots'] = plots
-    attrs['plot_labels'] = plot_labels
+
+def axes_main_functions(args, attrs):
+
+    #import inspect
 
     # title setting
-    #if args.title:
     for title_arg in args.title:
-        ax, targ = _get_axis(title_arg)
-        title = targ.format(**attrs)
-        teye_exec('%s.set_title(%s)'%(ax, title), l=attrs)
+        ax, arg = _get_axis(title_arg)
+        title = arg.format(**attrs)
+        teye_eval('%s.set_title(%s)'%(ax, title), l=attrs)
 
-    # x ax.s setting
-    if args.xlim:
-        teye_exec('ax.set_xlim(%s)'%args.xlim, l=attrs)
 
-    if args.xlabel:
-        xlabel = args.xlabel.format(**attrs)
-        teye_exec('ax.set_xlabel(%s)'%xlabel, l=attrs)
+    for xaxis_arg in args.xaxis:
+        ax, arg = _get_axis(xaxis_arg)
+        xaxis = arg.format(**attrs)
 
-    if args.xticks:
-        teye_exec('ax.xticks(%s)'%args.xticks, l=attrs)
+        set_xfuncs =  dict((x, getattr(attrs[ax], x)) for x in dir(attrs[ax]) if x.startswith('set_x'))
+        parsed_args = parse_kwargs({}, xaxis, attrs)
 
-    if args.xtick_style:
-        for xtick_style in args.xtick_style:
-            if len(xtick_style.strip())==0: continue
-            locs, labels = pyplot.xticks()
-            teye_exec('ax.xticks(locs, %s)'%xtick_style, l=attrs)
+        for name, func in set_xfuncs.items():
+            funckey = name[5:]
+            if name[5:] in parsed_args:
+                func_args = dict(parsed_args)
+                value = func_args.pop(name[5:])
+                func(value, **func_args)
 
-    # y ax.s setting
-    if args.ylim:
-        teye_exec('ax.set_ylim(%s)'%args.ylim, l=attrs)
+    for yaxis_arg in args.yaxis:
+        ax, arg = _get_axis(yaxis_arg)
+        yaxis = arg.format(**attrs)
 
-    if args.ylabel:
-        ylabel = args.ylabel.format(**attrs)
-        teye_exec('ax.set_ylabel(%s)'%ylabel, l=attrs)
+        set_yfuncs =  dict((y, getattr(attrs[ax], y)) for y in dir(attrs[ax]) if y.startswith('set_y'))
+        parsed_args = parse_kwargs({}, yaxis, attrs)
 
-    if args.yticks:
-        teye_exec('ax.yticks(%s)'%args.yticks, l=attrs)
-
-    if args.ytick_style:
-        for ytick_style in args.ytick_style:
-            if len(ytick_style.strip())==0: continue
-            locs, labels = pyplot.yticks()
-            teye_exec('ax.yticks(locs, %s)'%ytick_style, l=attrs)
+        for name, func in set_yfuncs.items():
+            funckey = name[5:]
+            if name[5:] in parsed_args:
+                func_args = dict(parsed_args)
+                value = func_args.pop(name[5:])
+                func(value, **func_args)
 
     # grid setting
+    if args.g:
+        attrs['ax'].grid()
+
     if args.grid:
-        for g in args.grid:
-            teye_exec('ax.grid(%s)'%g, l=attrs)
+        for grid_arg in args.grid:
+            if grid_arg:
+                ax, arg = _get_axis(grid_arg)
+                grid = arg.format(**attrs)
+                teye_eval('%s.grid(%s)'%(ax, grid), l=attrs)
 
     # legend setting 
+    if args.l:
+        attrs['ax'].legend()
+
     if args.legend:
-        teye_exec('ax.legend(%s)'%args.legend, l=attrs)
-
-    # saving an image file
-    if args.save:
-        for saveargs in args.save:
-            arglist = saveargs.split(',', 1)
-            if '_pdf_merge' in attrs:
-                if '_pdf_pages' not in attrs:
-                    teye_exec('_pdf_pages = _pdf_merge(%s)'%arglist[0], l=attrs)
-                teye_exec('_pdf_pages.savefig()', l=attrs)
-            else:
-                teye_exec('pyplot.savefig(%s)'%saveargs, l=attrs)
-
-    # displyaing an image on screen
-    if not args.noshow:
-        attrs['pyplot'].show()
+        for legend_arg in args.legend:
+            if legend_arg:
+                ax, arg = _get_axis(legend_arg)
+                legend = arg.format(**attrs)
+                teye_eval('%s.legend(%s)'%(ax, legend), l=attrs)
 
 def teye_plot(args, attrs):
+
+    # matplotlib settings
 
     # pages setting
     if args.pages:
@@ -165,19 +147,64 @@ def teye_plot(args, attrs):
 
 
         # plot axis
-        if args.axis:
-            for axis_arg in args.axis:
-                ax, others = _get_axis(axis_arg)
-                if ax:
-                    attrs[ax] = teye_eval('figure.add_subplot(%s)'%others, l=attrs)
+        if args.ax:
+            for ax_arg in args.ax:
+                axname, others = _get_axis(ax_arg)
+                if axname:
+                    attrs[axname] = teye_eval('figure.add_subplot(%s)'%others, l=attrs)
                 else:
-                    raise UsageError('Wrong axis option: %s'%axis_arg)
+                    raise UsageError('Wrong axis option: %s'%ax_arg)
         else:
             attrs['ax'] = attrs['figure'].add_subplot(111)
 
+        # page names
+        if 'page_names' in attrs:
+            page_names = attrs['page_names']
+            if callable(page_names):
+                attrs['page_name'] = page_names(attrs['page_num'])
+            else:
+                attrs['page_name'] = page_names[attrs['page_num']]
+        else:
+            attrs['page_name'] = 'page%d'%(attrs['page_num'] + 1)
+
+        #######################
+
+
+        # generate plots
         gen_plot(args, attrs)
 
-        attrs['pyplot'].close()
+        # selected axes functions
+        axes_main_functions(args, attrs)
+
+        # execute axes functions
+        #for axis in args.axes:
+
+
+        if not args.axes and not attrs['plots']:
+            if len(attrs['_data_objects']) > 0:
+                for data_obj in attrs['_data_objects']:
+                    attrs['ax'].plot(data_obj.get_data('', '', attrs))
+            else:
+                error_exit("There is no data to plot.")
+
+        #######################
+
+        # saving an image file
+        if args.save:
+            for saveargs in args.save:
+                arglist = saveargs.split(',', 1)
+                if '_pdf_merge' in attrs:
+                    if '_pdf_pages' not in attrs:
+                        teye_exec('_pdf_pages = _pdf_merge(%s)'%arglist[0], l=attrs)
+                    teye_exec('_pdf_pages.savefig()', l=attrs)
+                else:
+                    teye_exec('pyplot.savefig(%s)'%saveargs, l=attrs)
+
+        # displyaing an image on screen
+        if not args.noshow:
+            attrs['pyplot'].show()
+
+            attrs['pyplot'].close()
 
     # multi-page closing
     if '_pdf_pages' in attrs:

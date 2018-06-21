@@ -37,6 +37,7 @@ builtins = {
     'min': min,
     'object': object,
     'True': True,
+    'tuple': tuple,
 #    '': f,
 #    '': f,
 }

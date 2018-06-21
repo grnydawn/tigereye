@@ -54,7 +54,7 @@ def ttest_numpy_text():
         #"--data-format", "numpytext, delimiter=','",
     assert main(argv) == 0
 
-def test_csv_file():
+def ttest_csv_file():
     argv = [
         "%s"%csv_text_data1,
         "-x", "d0[1,:]",
@@ -69,6 +69,24 @@ def test_csv_file():
         #"--noplot",
         "--save", "'test.pdf'",
 
+    ]
+    assert main(argv) == 0
+
+def test_axis_opt():
+    argv = [
+        "[1,2,3]", "[4,5,6]",
+        "-x", "d0",
+        "-y", "d1",
+        "--xaxis", "label='xlabel', fontsize=20",
+        "--xaxis", "ticks=[1.5, 2.5]",
+        "--xaxis", "ticklabels=['a', 'b']",
+        "--yaxis", "label='ylabel'",
+        "--yaxis", "ticks=[4.5, 5.5]",
+        "--yaxis", "ticklabels=['x', 'y']",
+        "-t", "'Title'",
+        "-g",
+        "-l",
+        "-p", "plot, x, y, label='label'",
     ]
     assert main(argv) == 0
 
