@@ -16,10 +16,10 @@ def teye_var(args, attrs):
 
     maxinputs = max(args.num_xinputs, args.num_yinputs, args.num_zinputs)
 
-    for idx in range(1, maxinputs+1):
+    for idx in range(0, maxinputs+1):
 
         for v in ('x', 'y', 'z'):
-            vname = v+str(idx) if idx > 1 else v
+            vname = v+str(idx) if idx > 0 else v
 
             if vname in args and args[vname]:
                 formula = args[vname]
@@ -28,6 +28,8 @@ def teye_var(args, attrs):
                     if match:
                         did = match.group('did')
                         others = match.group('others')
+                        if others and others[0] == '.':
+                            others = others[1:]
                         attrs[did].get_data(vname, others, attrs)
                 elif formula[0:5]=='numpy':
                     handler = attrs['_build_handlers']['numpybuild']()

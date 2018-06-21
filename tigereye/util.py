@@ -38,6 +38,8 @@ builtins = {
     'object': object,
     'True': True,
     'tuple': tuple,
+    'float': float,
+    'str': str,
 #    '': f,
 #    '': f,
 }

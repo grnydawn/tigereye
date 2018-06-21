@@ -118,13 +118,13 @@ class ArgParse(object):
         parser.add_argument('--noplot', action='store_true', default=False, help='prevent generating plot.')
         parser.add_argument('--version', action='version', version='tigereye version 0.1.0')
 
-        for idx in range(2, num_xinputs+1):
+        for idx in range(1, num_xinputs+1):
             parser.add_argument('--x%d'%idx, metavar='<formula>', help='define x%d data.'%idx)
 
-        for idx in range(2, num_yinputs+1):
+        for idx in range(1, num_yinputs+1):
             parser.add_argument('--y%d'%idx, metavar='<formula>', help='define y%d data.'%idx)
 
-        for idx in range(2, num_zinputs+1):
+        for idx in range(1, num_zinputs+1):
             parser.add_argument('--z%d'%idx, metavar='<formula>', help='define z%d data.'%idx)
 
         parsed_args = parser.parse_args(newargv)
