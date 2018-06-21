@@ -22,8 +22,8 @@ def main(argv):
 
     try:
 
-        # plotting attributes
-        attrs = {'max': max}
+        # plotting environment
+        attrs = {}
 
         # import core libraries
         import csv

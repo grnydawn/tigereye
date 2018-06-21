@@ -21,26 +21,27 @@ def ttest_main():
 def ttest_array_in_cmdline():
     argv = [
         "[[1,2,3], [1,4,9]]", "[4,5,6]",
-        "-x", "d1",
-        "-y", "d0[1].log(y**x).sqrt(y)",
+        "-v", "l1:d1",
+        "-v", "l2:d0[1].log(l2**l1).sqrt(l2)",
         "-t", "'test', fontsize=24",
-        "--xlabel", "'xlabel'",
-        "--xticks", "x, ['a', 'b', 'c']",
-        "--ylabel", "'ylabel'",
-        "-p", "plot, x, y",
+        "-x", "label='xlabel'",
+        "-x", "ticks=l1",
+        "-x", "ticklabels=['a', 'b', 'c']",
+        "-y", "label='ylabel'",
+        "-p", "plot, l1, l2",
     ]
     assert main(argv) == 0
 
 def ttest_numpy_data():
     argv = [
-        "-x", "numpy.arange(3)",
-        "-y", "numpy.random~rand(3)",
+        "-v", "l1:numpy.arange(3)",
+        "-v", "l2:numpy.random~rand(3)",
         "-t", "'test', fontsize=24",
-        "--xlabel", "'xlabel'",
-        "--xticks", "x, ['a', 'b', 'c']",
-        "--ylabel", "'ylabel'",
-        "-p", "scatter, x, y, label='s'",
-        "-p", "scatter, y, x, label='t'",
+        "-x", "label='xlabel'",
+        "-x", "ticklabels=['a', 'b', 'c']",
+        "-y", "label='ylabel'",
+        "-p", "scatter, l1, l2, label='s'",
+        "-p", "scatter, l2, l1, label='t'",
         "-l",
     ]
     assert main(argv) == 0
@@ -48,22 +49,24 @@ def ttest_numpy_data():
 def ttest_numpy_text():
     argv = [
         "%s"%numpy_text_data1,
-        "-x", "d0[1,:]",
-        "-p", "plot, x**2",
+        "--data-format", "numpytext, delimiter=' '",
+        "-v", "l1:d0[1,:]",
+        "-p", "plot, l1**2",
+        #"-d", "l1",
+        #"--noplot",
     ]
-        #"--data-format", "numpytext, delimiter=','",
     assert main(argv) == 0
 
 def ttest_csv_file():
     argv = [
         "%s"%csv_text_data1,
-        "-x", "d0[1,:]",
-        "-y", "x.astype(numpy.float)",
-        "-z", "max(d0[1,:])",
-        "-p", "plot, y**2",
+        "-v", "l1:d0[1,:]",
+        "-v", "l2:l1.astype(numpy.float)",
+        "-v", "l3:max(d0[1,:])",
+        "-p", "plot, l2**2",
         "--data-format", "csv, delimiter=';'",
-        "--calc", "y = y**2",
-        "--value", "y",
+        "--calc", "l2 = l2**2",
+        "--value", "l2",
         "--pages", "2",
         #"--pages", "2, pdf_merge=True",
         #"--noplot",
@@ -72,22 +75,42 @@ def ttest_csv_file():
     ]
     assert main(argv) == 0
 
-def test_axis_opt():
+def ttest_axis_opt():
     argv = [
         "[1,2,3]", "[4,5,6]",
-        "-x", "d0",
-        "-y", "d1",
-        "-a", "label='xlabel', fontsize=20",
-        "-a", "ticks=[1.5, 2.5]",
-        "-a", "ticklabels=['a', 'b']",
-        "-b", "label='ylabel'",
-        "-b", "ticks=[4.5, 5.5]",
-        "-b", "ticklabels=['x', 'y']",
+        "-v", "l1:d0",
+        "-v", "l2:d1",
+        "-x", "label='xlabel', fontsize=20",
+        "-x", "ticks=[1.5, 2.5]",
+        "-x", "ticklabels=['a', 'b']",
+        "-y", "label='ylabel'",
+        "-y", "ticks=[4.5, 5.5]",
+        "-y", "ticklabels=['x', 'y']",
         "--axes", "set_title, 'new title'",
         "-t", "'Title'",
         "-g",
         "-l",
-        "-p", "plot, x, y, label='label'",
+        "-p", "plot, l1, l2, label='label'",
+    ]
+    assert main(argv) == 0
+
+def test_axis_opt():
+    argv = [
+        "[1,2,3]", "[4,5,6]",
+        "-v", "l1:d0",
+        "-v", "l2:d1",
+        "--ax", "ax1:121",
+        "--ax", "ax2:122",
+        "-x", "ax1:label='xlabel', fontsize=20",
+        "-x", "ax2:ticks=[1.5, 2.5]",
+        "-x", "ax1:ticklabels=['a', 'b']",
+        "-y", "ax2:label='ylabel'",
+        "-y", "ax1:ticks=[4.5, 5.5]",
+        "-y", "ax2:ticklabels=['x', 'y']",
+        "--axes", "ax1:set_title, 'new title'",
+        "-t", "ax2:'Title'",
+        "-p", "ax1:plot, l1, l2, label='label'",
+        "-p", "ax2:plot, l2, l1, label='label'",
     ]
     assert main(argv) == 0
 

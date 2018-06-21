@@ -180,7 +180,7 @@ def teye_plot(args, attrs):
             if len(axes) == 1:
                 teye_eval('ax.%s()'%axes[0], l=attrs)
             else:
-                teye_eval('ax.%s(%s)'%(axes[0], axes[1]), l=attrs)
+                teye_eval('%s.%s(%s)'%(ax, axes[0], axes[1]), l=attrs)
 
         if not args.axes and not attrs['plots']:
             if len(attrs['_data_objects']) > 0:

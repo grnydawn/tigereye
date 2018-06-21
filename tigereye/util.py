@@ -70,8 +70,7 @@ def teye_eval(expr, g={'__builtins__': builtins}, l={}):
     try:
         return eval(expr, g, l)
     except NameError as err:
-        name =
-        raise UsageError(check name is wrapped properly)
+        raise
 
 def teye_exec(obj, g={'__builtins__': builtins}, l={}):
     exec(obj, g, l)
