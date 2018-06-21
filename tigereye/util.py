@@ -65,7 +65,11 @@ _DEBUG_LEVEL = 3 # 0: no debug, 1~3: higher is more debugging information
 PY3 = sys.version_info >= (3, 0)
 
 def teye_eval(expr, g={'__builtins__': builtins}, l={}):
-    return eval(expr, g, l)
+    try:
+        return eval(expr, g, l)
+    except NameError as err:
+        name =
+        raise UsageError(check name is wrapped properly)
 
 def teye_exec(obj, g={'__builtins__': builtins}, l={}):
     exec(obj, g, l)
