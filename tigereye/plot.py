@@ -167,9 +167,6 @@ def teye_plot(args, attrs):
         else:
             attrs['page_name'] = 'page%d'%(attrs['page_num'] + 1)
 
-        #######################
-
-
         # generate plots
         gen_plot(args, attrs)
 
@@ -177,8 +174,13 @@ def teye_plot(args, attrs):
         axes_main_functions(args, attrs)
 
         # execute axes functions
-        #for axis in args.axes:
-
+        for axes_arg in args.axes:
+            ax, arg = _get_axis(axes_arg)
+            axes = arg.split(',', 1)
+            if len(axes) == 1:
+                teye_eval('ax.%s()'%axes[0], l=attrs)
+            else:
+                teye_eval('ax.%s(%s)'%(axes[0], axes[1]), l=attrs)
 
         if not args.axes and not attrs['plots']:
             if len(attrs['_data_objects']) > 0:
@@ -186,8 +188,6 @@ def teye_plot(args, attrs):
                     attrs['ax'].plot(data_obj.get_data('', '', attrs))
             else:
                 error_exit("There is no data to plot.")
-
-        #######################
 
         # saving an image file
         if args.save:

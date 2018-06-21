@@ -83,6 +83,7 @@ def test_axis_opt():
         "--yaxis", "label='ylabel'",
         "--yaxis", "ticks=[4.5, 5.5]",
         "--yaxis", "ticklabels=['x', 'y']",
+        "--axes", "set_title, 'new title'",
         "-t", "'Title'",
         "-g",
         "-l",
