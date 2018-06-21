@@ -9,37 +9,68 @@ import re
 from .util import teye_eval, teye_exec, _DEBUG
 
 _re_did = re.compile(r'(?P<did>d\d+)(?P<others>.*)')
+_re_var = re.compile(r'(?P<name>\w+)\s*:\s*(?P<others>.*)')
+
+def _get_var(var):
+
+    for arg in var:
+        match = _re_var.match(arg)
+        if match:
+            yield match.group('name'), match.group('others')
+        else:
+            raise UsageError('The syntax of data definitiion is not correct: %s'%arg)
+
+
 
 def teye_var(args, attrs):
 
     # collect values
 
-    maxinputs = max(args.num_xinputs, args.num_yinputs, args.num_zinputs)
+#    maxinputs = max(args.num_xinputs, args.num_yinputs, args.num_zinputs)
+#
+#    for idx in range(0, maxinputs+1):
+#
+#        for v in ('x', 'y', 'z'):
+#            vname = v+str(idx) if idx > 0 else v
+#
+#            if vname in args and args[vname]:
+#                formula = args[vname]
+#                if formula[0]=='d':
+#                    match = _re_did.match(formula)
+#                    if match:
+#                        did = match.group('did')
+#                        others = match.group('others')
+#                        if others and others[0] == '.':
+#                            others = others[1:]
+#                        attrs[did].get_data(vname, others, attrs)
+#                elif formula[0:5]=='numpy':
+#                    handler = attrs['_build_handlers']['numpybuild']()
+#                    handler.get_data(vname, formula[6:].strip(), attrs)
+#                else:
+#                    try:
+#                        attrs[vname] = teye_eval(formula, l=attrs)
+#                    except:
+#                        raise Exception('Unknown %s argument format: %s'%(
+#                            vname, formula))
 
-    for idx in range(0, maxinputs+1):
-
-        for v in ('x', 'y', 'z'):
-            vname = v+str(idx) if idx > 0 else v
-
-            if vname in args and args[vname]:
-                formula = args[vname]
-                if formula[0]=='d':
-                    match = _re_did.match(formula)
-                    if match:
-                        did = match.group('did')
-                        others = match.group('others')
-                        if others and others[0] == '.':
-                            others = others[1:]
-                        attrs[did].get_data(vname, others, attrs)
-                elif formula[0:5]=='numpy':
-                    handler = attrs['_build_handlers']['numpybuild']()
-                    handler.get_data(vname, formula[6:].strip(), attrs)
-                else:
-                    try:
-                        attrs[vname] = teye_eval(formula, l=attrs)
-                    except:
-                        raise Exception('Unknown %s argument format: %s'%(
-                            vname, formula))
+    for vname, formula in _get_var(args.var):
+        if formula[0]=='d':
+            match = _re_did.match(formula)
+            if match:
+                did = match.group('did')
+                others = match.group('others')
+                if others and others[0] == '.':
+                    others = others[1:]
+                attrs[did].get_data(vname, others, attrs)
+        elif formula[0:5]=='numpy':
+            handler = attrs['_build_handlers']['numpybuild']()
+            handler.get_data(vname, formula[6:].strip(), attrs)
+        else:
+            try:
+                attrs[vname] = teye_eval(formula, l=attrs)
+            except:
+                raise Exception('Unknown %s argument format: %s'%(
+                    vname, formula))
 
     if args.calc:
         for calc in args.calc:
