@@ -93,6 +93,8 @@ class Data(object):
         stack = []
         remained = False
 
+        arg = arg.replace(' ', '__WS__')
+
         for item in shlex.shlex(arg):
 
             if remained:
@@ -101,10 +103,14 @@ class Data(object):
 
             if stack:
                 if item == '(':
+                    if stack:
+                        params.append(item)
                     stack.append(item)
                 elif item == ')':
                     stack.pop()
-                    if not stack:
+                    if stack:
+                        params.append(item)
+                    else:
                         remained = True
                 else:
                     params.append(item)
@@ -121,7 +127,9 @@ class Data(object):
         if others and others[0] == ".":
             others = others[1:]
 
-        return ''.join(cmd), ''.join(params), ''.join(others)
+        return (''.join(cmd).replace('__WS__', ' '),
+            ''.join(params).replace('__WS__', ' '),
+            ''.join(others).replace('__WS__', ' '))
 
 # handler types
 
