@@ -110,7 +110,7 @@ Multi-page PDF file is generated .
         -x "label='X', fontsize=12" \
         -y "label='Y', fontsize=12" \
         --pages "len(d0), page_names=['Page-%d'%n for n in range(len(d0))], pdf_merge=True" \
-        -p "plot, numpy.arange(3), d0[page_num, :], label='line-%d'%page_num" \
+        -p "plot, numpy.arange(len(d0)), d0[page_num, :], label='line-%d'%page_num" \
         -t "page_names[page_num]" \
         -s "'sample.pdf'" \
         --noshow \
