@@ -5,6 +5,8 @@ from __future__ import (absolute_import, division,
 
 import sys
 
+from .error import UsageError
+
 _DEBUG = True
 
 builtins = {
@@ -70,10 +72,13 @@ def teye_eval(expr, g={'__builtins__': builtins}, l={}):
     try:
         return eval(expr, g, l)
     except NameError as err:
-        raise
+        raise UsageError(str(err))
 
 def teye_exec(obj, g={'__builtins__': builtins}, l={}):
-    exec(obj, g, l)
+    try:
+        exec(obj, g, l)
+    except NameError as err:
+        raise UsageError(str(err))
 
 def error_exit(msg):
     print("Error: %s"%msg)
