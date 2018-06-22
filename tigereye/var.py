@@ -53,7 +53,7 @@ def teye_var(args, attrs):
 #                        raise Exception('Unknown %s argument format: %s'%(
 #                            vname, formula))
 
-    for vname, formula in _get_var(args.var):
+    for vname, formula in _get_var(args.variable):
         if formula[0]=='d':
             match = _re_did.match(formula)
             if match:
