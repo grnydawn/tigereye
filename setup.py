@@ -11,9 +11,9 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [ ]
+requirements = [ 'numpy', 'matplotlib' ]
 
-setup_requirements = ['pytest-runner', ]
+setup_requirements = [ ]
 
 test_requirements = ['pytest', ]
 
@@ -32,7 +32,7 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
-    description="Template-based data plotter",
+    description="A reusable data-mainupulation and plotting tool",
     entry_points={
         'console_scripts': [
             'tigereye=tigereye.tigereye:entry',
