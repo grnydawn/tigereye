@@ -143,14 +143,17 @@ Plot is generated using a template .
 
     T.B.D.
 
- 
+--------------
+Documentation
+--------------
+
+    T.B.D.
 
 -------
 Credits
 -------
 
 Tigereye extensively uses matplotlib_ and numpy_.
-This package was created with Stemcode_ and the `grnydawn/stemcode`_ project template.
 
 .. _matplotlib: https://matplotlib.org/
 .. _numpy: http://www.numpy.org/
