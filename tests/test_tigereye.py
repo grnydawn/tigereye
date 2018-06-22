@@ -117,18 +117,15 @@ def ttest_axis_opt():
     assert main(argv) == 0
 
 
-def test_csv_file():
+def test_remote_csv():
     argv = [
         "%s"%remote_csv_data1, "['Page1', 'Page2']",
-        "-v", "l1=d0[1,:]",
-        "-v", "l2=l1.astype(numpy.float)",
+        "-v", "l=d0",
         "-v", "l3=max(d0[1,:])",
         "-v", "l4=d1",
-        "-p", "plot, l2**2",
+        "-p", "plot, l[page_num, :]**2",
         "-t", "l4[page_num]",
         "--data-format", "d0:numpytext, delimiter=','",
-        "--calc", "l2 = l2**2",
-        "--value", "l2",
         #"--pages", "2",
         "--pages", "2, pdf_merge=True",
         #"--noplot",

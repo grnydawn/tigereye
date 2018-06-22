@@ -67,14 +67,12 @@ def axes_main_functions(args, attrs):
 
     # title setting
     for title_arg in args.title:
-        ax, arg = _get_axis(title_arg)
-        title = arg.format(**attrs)
+        ax, title = _get_axis(title_arg)
         teye_eval('%s.set_title(%s)'%(ax, title), l=attrs)
 
 
     for xaxis_arg in args.xaxis:
-        ax, arg = _get_axis(xaxis_arg)
-        xaxis = arg.format(**attrs)
+        ax, xaxis = _get_axis(xaxis_arg)
 
         set_xfuncs =  dict((x, getattr(attrs[ax], x)) for x in dir(attrs[ax]) if x.startswith('set_x'))
         parsed_args = parse_kwargs({}, xaxis, attrs)
@@ -87,8 +85,7 @@ def axes_main_functions(args, attrs):
                 func(value, **func_args)
 
     for yaxis_arg in args.yaxis:
-        ax, arg = _get_axis(yaxis_arg)
-        yaxis = arg.format(**attrs)
+        ax, yaxis = _get_axis(yaxis_arg)
 
         set_yfuncs =  dict((y, getattr(attrs[ax], y)) for y in dir(attrs[ax]) if y.startswith('set_y'))
         parsed_args = parse_kwargs({}, yaxis, attrs)
@@ -109,8 +106,7 @@ def axes_main_functions(args, attrs):
     if args.grid:
         for grid_arg in args.grid:
             if grid_arg:
-                ax, arg = _get_axis(grid_arg)
-                grid = arg.format(**attrs)
+                ax, grid = _get_axis(grid_arg)
                 teye_eval('%s.grid(%s)'%(ax, grid), l=attrs)
 
     # legend setting 
@@ -122,8 +118,7 @@ def axes_main_functions(args, attrs):
     if args.legend:
         for legend_arg in args.legend:
             if legend_arg:
-                ax, arg = _get_axis(legend_arg)
-                legend = arg.format(**attrs)
+                ax, legend = _get_axis(legend_arg)
                 teye_eval('%s.legend(%s)'%(ax, legend), l=attrs)
 
 def teye_plot(args, attrs):
@@ -132,15 +127,16 @@ def teye_plot(args, attrs):
 
     # pages setting
     if args.pages:
-        arglist = args.pages.split(',', 1)
-        attrs['num_pages'] = int(arglist[0])
-        if len(arglist) > 1:
-            page_args = parse_kwargs({}, arglist[1], attrs)
-            if 'page_names' in page_args:
-                attrs['page_names'] = page_args['page_names']
-            if 'pdf_merge' in page_args and page_args['pdf_merge']:
-                from matplotlib.backends.backend_pdf import PdfPages
-                attrs['_pdf_merge'] = PdfPages
+        num_pages, others = _get_name(args.pages)
+        attrs['num_pages'] = int(num_pages)
+        if others:
+            page_args = parse_kwargs({}, others, attrs)
+            for key, value in page_args.items():
+                if key == 'pdf_merge' and value:
+                    from matplotlib.backends.backend_pdf import PdfPages
+                    attrs['_pdf_merge'] = PdfPages
+                else:
+                    attrs[key] = page_args[key]
     else:
         attrs['num_pages'] = 1
 
