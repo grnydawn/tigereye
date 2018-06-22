@@ -19,7 +19,7 @@ tigereye
 A reusable data-manipulation and plotting tool
 
 * Free software: MIT license
-* Documentation: https://tigereye.readthedocs.io.
+* Documentation: https://tigereye.readthedocs.io. (T.B.D.)
 
 
 -----------------
@@ -81,7 +81,26 @@ Data is generated using numpy.
         -y "label='Y', fontsize=12" \
         -p "plot, varx, vary, label='line1'"
 
-Data is downloaded from online.
+Data is read from a local file.
+===============================
+
+.. code-block:: text
+
+    $ echo $'1,2,3\n4,5,6\n7,8,9' > simple.csv
+    $ tigereye simple.csv \
+        --data-format "numpytext, delimiter=','" \
+        -v "row0=d0[0,:]" \
+        -v "row1=d0[1,:]" \
+        -v "row2=d0[2,:]" \
+        -t "'Sample Plot', fontsize=16" \
+        -x "label='X', fontsize=12" \
+        -y "label='Y', fontsize=12" \
+        -p "plot, row0, row2, label='line-1'" \
+        -p "bar, row0, row1, width= 0.5, label='bar-1'" \
+        -g \
+        -l
+
+Data is read from online.
 ===============================
 
 .. code-block:: text
