@@ -135,16 +135,29 @@ class Data(object):
 
 class FileData(Data):
     pass
-    #def _normalize_filepath(self, path):
-    #    if path or path[0] not in ('"', "'") or path[0] != path[-1]:
-    #        path = "'%s'"%path
-    #    return path
 
 class ValueData(Data):
     pass
 
-
 # mixins
+
+class RemoteDataMixin(object):
+
+    def  _download(self, datasrc):
+
+        data = None
+
+        try:
+            if urlparse(datasrc).netloc:
+                f = urlopen(datasrc)
+                data = f.read()
+                f.close()
+        except HTTPError, e:
+            error_exit("HTTP Error: %s %s"%(str(e.code), datasrc))
+        except URLError, e:
+            error_exit("URL Error: %s %s"%(str(e.reason), datasrc))
+
+        return data
 
 class BuildMixin(object):
 
@@ -185,28 +198,45 @@ class NumpyBuildData(NumpyMixin, BuildMixin, ValueData):
     name = 'numpybuild'
 
 
-class NumpyTextData(NumpyMixin, FileData):
+class NumpyTextData(NumpyMixin, FileData, RemoteDataMixin):
 
     name = 'numpytext'
 
     def __init__(self, datasrc, args, attrs):
 
+        fname = None
+
         if os.path.isfile(datasrc):
+            fname = datasrc
+        elif urllib_imported:
+            fname = self._download(datasrc)
+
+        if fname:
             kwargs = ''
             if args:
-                kwargs = ', %s'%args
+                kwargs += ', %s'%args
             self.data = teye_eval("numpy.genfromtxt('%s'%s)"%(datasrc, kwargs), l=attrs)
         else:
             error_exit("Input argument syntax error: '%s, %s'"%(datasrc, args))
 
-class CsvTextData(NumpyMixin, FileData):
+class CsvTextData(NumpyMixin, FileData, RemoteDataMixin):
 
     name = 'csv'
 
     def __init__(self, datasrc, args, attrs):
 
+        fname = None
+
         if os.path.isfile(datasrc):
+            fname = datasrc
+        elif urllib_imported:
+            fname = self._download(datasrc)
+
+        if fname:
             kwargs = ', dtype=object'
+            if not args or 'delimiter' not in args:
+                kwargs += ", delimiter=','"
+
             if args:
                 kwargs += ', %s'%args
             self.data = teye_eval("numpy.genfromtxt('%s'%s)"%(datasrc, kwargs), l=attrs)
@@ -236,10 +266,6 @@ def _select_srcfmt(datasrc, attrs):
                 return cls(datasrc, None, attrs)
             except:
                 pass
-
-    if urllib_imported:
-        pass
-        #import pdb; pdb.set_trace()
 
 def teye_load(args, attrs):
 

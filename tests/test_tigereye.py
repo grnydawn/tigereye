@@ -13,6 +13,7 @@ curdir = os.path.dirname(os.path.realpath(__file__))
 
 numpy_text_data1 = "%s/data/numpy_text_data1.csv"%curdir
 csv_text_data1 = "%s/data/csv_text_data1.csv"%curdir
+remote_csv_data1 = "https://raw.githubusercontent.com/grnydawn/tigereye/master/data/simple.csv"
 
 def ttest_main():
     assert main(["[1,2,3]"]) == 0
@@ -94,7 +95,7 @@ def ttest_axis_opt():
     ]
     assert main(argv) == 0
 
-def test_axis_opt():
+def ttest_axis_opt():
     argv = [
         "[1,2,3]", "[4,5,6]",
         "-v", "l1=d0",
@@ -112,6 +113,25 @@ def test_axis_opt():
         "-l",
         "-p", "ax1:plot, l1, l2, label='label'",
         "-p", "ax2:plot, l2, l1, label='label'",
+    ]
+    assert main(argv) == 0
+
+
+def test_csv_file():
+    argv = [
+        "%s"%remote_csv_data1,
+        "-v", "l1=d0[1,:]",
+        "-v", "l2=l1.astype(numpy.float)",
+        "-v", "l3=max(d0[1,:])",
+        "-p", "plot, l2**2",
+        "--data-format", "numpytext, delimiter=','",
+        "--calc", "l2 = l2**2",
+        "--value", "l2",
+        #"--pages", "2",
+        "--pages", "2, pdf_merge=True",
+        #"--noplot",
+        "--save", "'test.pdf'",
+
     ]
     assert main(argv) == 0
 
