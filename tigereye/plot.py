@@ -10,11 +10,16 @@ from .error import UsageError
 from .util import (error_exit, teye_eval, teye_exec, temp_attrs,
     parse_kwargs)
 
-_re_ax = re.compile(r'(?P<ax>ax\d*)\s*:\s*(?P<others>.*)')
+_re_ax_colon = re.compile(r'(?P<ax>ax\d*)\s*:\s*(?P<others>.*)')
+_re_ax_equal = re.compile(r'(?P<ax>ax\d*)\s*=\s*(?P<others>.*)')
 _re_name = re.compile(r'(?P<name>\w+)\s*,?\s*(?P<others>.*)')
 
-def _get_axis(arg):
-    match = _re_ax.match(arg)
+def _get_axis(arg, delimiter=':'):
+    match = None
+    if delimiter == ':':
+        match = _re_ax_colon.match(arg)
+    elif delimiter == '=':
+        match = _re_ax_equal.match(arg)
     if match:
         return match.group('ax'), match.group('others')
     else:
@@ -97,7 +102,9 @@ def axes_main_functions(args, attrs):
 
     # grid setting
     if args.g:
-        attrs['ax'].grid()
+        for key in attrs:
+            if key=='ax' or (key.startswith('ax') and int(key[2:]) >= 0):
+                attrs[key].grid()
 
     if args.grid:
         for grid_arg in args.grid:
@@ -108,7 +115,9 @@ def axes_main_functions(args, attrs):
 
     # legend setting 
     if args.l:
-        attrs['ax'].legend()
+        for key in attrs:
+            if key=='ax' or (key.startswith('ax') and int(key[2:]) >= 0):
+                attrs[key].legend()
 
     if args.legend:
         for legend_arg in args.legend:
@@ -149,7 +158,7 @@ def teye_plot(args, attrs):
         # plot axis
         if args.ax:
             for ax_arg in args.ax:
-                axname, others = _get_axis(ax_arg)
+                axname, others = _get_axis(ax_arg, delimiter='=')
                 if axname:
                     attrs[axname] = teye_eval('figure.add_subplot(%s)'%others, l=attrs)
                 else:

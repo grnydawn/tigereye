@@ -21,8 +21,8 @@ def ttest_main():
 def ttest_array_in_cmdline():
     argv = [
         "[[1,2,3], [1,4,9]]", "[4,5,6]",
-        "-v", "l1:d1",
-        "-v", "l2:d0[1].log(l2**l1).sqrt(l2)",
+        "-v", "l1=d1",
+        "-v", "l2=d0[1].log(l2**l1).sqrt(l2)",
         "-t", "'test', fontsize=24",
         "-x", "label='xlabel'",
         "-x", "ticks=l1",
@@ -34,8 +34,8 @@ def ttest_array_in_cmdline():
 
 def ttest_numpy_data():
     argv = [
-        "-v", "l1:numpy.arange(3)",
-        "-v", "l2:numpy.random~rand(3)",
+        "-v", "l1=numpy.arange(3)",
+        "-v", "l2=numpy.random~rand(3)",
         "-t", "'test', fontsize=24",
         "-x", "label='xlabel'",
         "-x", "ticklabels=['a', 'b', 'c']",
@@ -50,7 +50,7 @@ def ttest_numpy_text():
     argv = [
         "%s"%numpy_text_data1,
         "--data-format", "numpytext, delimiter=' '",
-        "-v", "l1:d0[1,:]",
+        "-v", "l1=d0[1,:]",
         "-p", "plot, l1**2",
         #"-d", "l1",
         #"--noplot",
@@ -60,9 +60,9 @@ def ttest_numpy_text():
 def ttest_csv_file():
     argv = [
         "%s"%csv_text_data1,
-        "-v", "l1:d0[1,:]",
-        "-v", "l2:l1.astype(numpy.float)",
-        "-v", "l3:max(d0[1,:])",
+        "-v", "l1=d0[1,:]",
+        "-v", "l2=l1.astype(numpy.float)",
+        "-v", "l3=max(d0[1,:])",
         "-p", "plot, l2**2",
         "--data-format", "csv, delimiter=';'",
         "--calc", "l2 = l2**2",
@@ -78,8 +78,8 @@ def ttest_csv_file():
 def ttest_axis_opt():
     argv = [
         "[1,2,3]", "[4,5,6]",
-        "-v", "l1:d0",
-        "-v", "l2:d1",
+        "-v", "l1=d0",
+        "-v", "l2=d1",
         "-x", "label='xlabel', fontsize=20",
         "-x", "ticks=[1.5, 2.5]",
         "-x", "ticklabels=['a', 'b']",
@@ -97,10 +97,10 @@ def ttest_axis_opt():
 def test_axis_opt():
     argv = [
         "[1,2,3]", "[4,5,6]",
-        "-v", "l1:d0",
-        "-v", "l2:d1",
-        "--ax", "ax1:121",
-        "--ax", "ax2:122",
+        "-v", "l1=d0",
+        "-v", "l2=d1",
+        "--ax", "ax1=121",
+        "--ax", "ax2=122",
         "-x", "ax1:label='xlabel', fontsize=20",
         "-x", "ax2:ticks=[1.5, 2.5]",
         "-x", "ax1:ticklabels=['a', 'b']",
@@ -109,6 +109,7 @@ def test_axis_opt():
         "-y", "ax2:ticklabels=['x', 'y']",
         "--axes", "ax1:set_title, 'new title'",
         "-t", "ax2:'Title'",
+        "-l",
         "-p", "ax1:plot, l1, l2, label='label'",
         "-p", "ax2:plot, l2, l1, label='label'",
     ]

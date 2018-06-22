@@ -9,7 +9,7 @@ import re
 from .util import teye_eval, teye_exec, _DEBUG
 
 _re_did = re.compile(r'(?P<did>d\d+)(?P<others>.*)')
-_re_var = re.compile(r'(?P<name>\w+)\s*:\s*(?P<others>.*)')
+_re_var = re.compile(r'(?P<name>\w+)\s*=\s*(?P<others>.*)')
 
 def _get_var(var):
 
