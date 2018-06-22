@@ -119,12 +119,14 @@ def ttest_axis_opt():
 
 def test_csv_file():
     argv = [
-        "%s"%remote_csv_data1,
+        "%s"%remote_csv_data1, "['Page1', 'Page2']",
         "-v", "l1=d0[1,:]",
         "-v", "l2=l1.astype(numpy.float)",
         "-v", "l3=max(d0[1,:])",
+        "-v", "l4=d1",
         "-p", "plot, l2**2",
-        "--data-format", "numpytext, delimiter=','",
+        "-t", "l4[page_num]",
+        "--data-format", "d0:numpytext, delimiter=','",
         "--calc", "l2 = l2**2",
         "--value", "l2",
         #"--pages", "2",

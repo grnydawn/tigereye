@@ -5,11 +5,20 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 
 import os
+import re
 import shlex
 import abc
 
 from .error import UsageError
 from .util import PY3, temp_attrs, teye_eval, teye_exec, error_exit
+
+_re_datafmt = re.compile(r'(d(?P<data>\d+)\s*:)?\s*(?P<format>\w+)\s*,\s*(?P<others>.*)')
+
+def _get_format(arg):
+    if match:
+        return match.group('ax'), match.group('others')
+    else:
+        return 'ax', arg
 
 # numpyarray
 
@@ -278,23 +287,15 @@ def teye_load(args, attrs):
     # format: 0:name, ... or name, ...
     if args.data_format:
         for fmt in args.data_format:
-            try:
-                comma = fmt.find(',')
-                colon = fmt.find(':')
-                if comma > 0 and colon > 0:
-                    if comma > colon:
-                        handler_name = fmt[comma+1:colon].replace(' ', '')
-                        handler = _data_handlers[handler_name]
-                        srcfmts[int(fmt[:comma])] = (handler, fmt[colon+1:])
-                    else:
-                        print('Warning: source format syntax error (ignored): %s'%fmt)
-                elif comma > 0:
-                    handler_name = fmt[:comma].replace(' ', '')
-                    global_fmt = (_data_handlers[handler_name], fmt[comma+1:])
+            match = _re_datafmt.match(fmt)
+            if match:
+                did, fmt, others = match.group('data'), match.group('format'), match.group('others')
+                handler = _data_handlers[fmt]
+                if did:
+                    srcfmts[int(did)] = (handler, others)
                 else:
-                    global_fmt = (_data_handlers[fmt], None)
-
-            except:
+                    global_fmt = (handler, others)
+            else:
                 print('Warning: source format syntax error (ignored): %s'%fmt)
 
     if global_fmt is not None:
