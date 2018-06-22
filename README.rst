@@ -37,7 +37,7 @@ Installing from github repository
     $ git clone https://github.com/grnydawn/tigereye.git
     $ cd tigereye
     $ python setup.py install
-    $ tigereye --help
+    $ tigereye --version
 
 ----------------
 Simple examples

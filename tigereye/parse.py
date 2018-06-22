@@ -74,7 +74,7 @@ class ArgParse(object):
 
     def _parse_arguments(self, argv):
 
-        parser = argparse.ArgumentParser(description='A template-based data plotter')
+        parser = argparse.ArgumentParser(description='A reusable data-manipulation and plotting tool')
         parser.add_argument('data_sources', metavar='data source', nargs='*', help='input raw data.')
         parser.add_argument('-v', '--variable', metavar='varname:<formula>', action='append', default=[], help='define data.')
         parser.add_argument('-t', '--title', metavar='title', action='append', default=[], help='title  plotting.')
