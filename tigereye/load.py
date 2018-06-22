@@ -66,6 +66,12 @@ class Data(object):
     def __getitem__(self, key):
         return self.data[key]
 
+    def __len__(self):
+        if self.data is None:
+            return 0
+        else:
+            return len(self.data)
+
     @abc.abstractmethod
     def _lib_item(self, vname, cmd, attrs):
         pass

@@ -16,22 +16,122 @@ tigereye
 
 
 
-Template-based data plotter
-
+A reusable data-manipulation and plotting tool
 
 * Free software: MIT license
 * Documentation: https://tigereye.readthedocs.io.
 
 
-Features
---------
+-----------------
+What is tigereye?
+-----------------
 
-* TODO
+Tigereye is a portable command-line utility for creating plots from various sources of data.  It advocates incremental plotting that you can immediately see the effect of changes made in command-line. Until satisfied, you can generate plots through a very quick cycle of "change-run-see". In addition, tigereye can read data from various formats and compactly modify them for plotting in command-line. Tigereye also supports importing data and plots that could be created independently.
 
+---------------------------------
+Installing from github repository
+---------------------------------
+
+.. code-block:: text
+
+    $ git clone https://github.com/grnydawn/tigereye.git
+    $ cd tigereye
+    $ python setup.py install
+    $ tigereye --help
+
+----------------
+Simple examples
+----------------
+
+The simplest tigereye plot
+==========================
+
+.. code-block:: text
+
+    $ tigereye [1,2]
+
+A title is added.
+=================
+
+.. code-block:: text
+
+    $ tigereye [1,2] \
+        -t "'Sample Plot', fontsize=16"
+
+Labels are added into x and y axes.
+===================================
+
+.. code-block:: text
+
+    $ tigereye [1,2] \
+        -t "'Sample Plot', fontsize=16" \
+        -x "label='X', fontsize=12" \
+        -y "label='Y', fontsize=12"
+
+Data is generated using numpy.
+==============================
+
+.. code-block:: text
+
+    $ tigereye \
+        -v "varx=numpy.linspace(0, 2*numpy.pi)" \
+        -v "vary=numpy.sin(varx)" \
+        -t "'Sample Plot', fontsize=16" \
+        -x "label='X', fontsize=12" \
+        -y "label='Y', fontsize=12" \
+        -p "plot, varx, vary, label='line1'"
+
+Data is downloaded from online.
+===============================
+
+.. code-block:: text
+
+    $ tigereye https://raw.githubusercontent.com/grnydawn/tigereye/master/data/simple.csv \
+        --data-format "numpytext, delimiter=','" \
+        -v "row0=d0[0,:]" \
+        -v "row1=d0[1,:]" \
+        -v "row2=d0[2,:]" \
+        -t "'Sample Plot', fontsize=16" \
+        -x "label='X', fontsize=12" \
+        -y "label='Y', fontsize=12" \
+        -p "plot, row0, row2, label='line-1'" \
+        -p "bar, row0, row1, width= 0.5, label='bar-1'" \
+        -g \
+        -l
+
+Multi-page PDF file is generated .
+==================================
+
+.. code-block:: text
+
+    $ tigereye https://raw.githubusercontent.com/grnydawn/tigereye/master/data/simple.csv \
+        --data-format "numpytext, delimiter=','" \
+        -t "'Sample Plot', fontsize=16" \
+        -x "label='X', fontsize=12" \
+        -y "label='Y', fontsize=12" \
+        --pages "len(d0), page_names=['Page-%d'%n for n in range(len(d0))], pdf_merge=True" \
+        -p "plot, numpy.arange(3), d0[page_num, :], label='line-%d'%page_num" \
+        -t "page_names[page_num]" \
+        -s "'sample.pdf'" \
+        --noshow \
+        -g \
+        -l
+
+Plot is generated using a template .
+====================================
+
+.. code-block:: text
+
+    T.B.D.
+
+ 
+
+-------
 Credits
 -------
 
+Tigereye extensively uses matplotlib_ and numpy_.
 This package was created with Stemcode_ and the `grnydawn/stemcode`_ project template.
 
-.. _Stemcode: https://github.com/grnydawn/stemcode
-.. _`grnydawn/stemcode`: https://github.com/grnydawn/stemcode
+.. _matplotlib: https://matplotlib.org/
+.. _numpy: http://www.numpy.org/

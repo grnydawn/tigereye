@@ -43,6 +43,7 @@ builtins = {
     'float': float,
     'str': str,
     'len': len,
+    'range': range,
 #    '': f,
 #    '': f,
 }
