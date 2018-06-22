@@ -84,6 +84,8 @@ class Data(object):
             cmd, params, arg = self._parse_arg(arg)
             if cmd[0] == '[' and cmd[-1] == ']':
                 data = self._lib_item(vname, cmd, attrs)
+            elif cmd == 'dict':
+                data = self._dict(vname, params, attrs)
             else:
                 data = self._lib_func(vname, cmd, params, attrs)
             if self.data is None:
@@ -140,6 +142,14 @@ class Data(object):
             ''.join(params).replace('__WS__', ' '),
             ''.join(others).replace('__WS__', ' '))
 
+    def _dict(self, vname, params, attrs):
+        newattrs = temp_attrs(attrs, [('_f_', dict)])
+        output = teye_eval('_f_(%s)'%params, g=newattrs)
+        if output is not None:
+            return output
+        else:
+            return newattrs[vname]
+
 # handler types
 
 class FileData(Data):
@@ -176,14 +186,14 @@ class BuildMixin(object):
 class NumpyMixin(object):
 
     def _lib_item(self, vname, cmd, attrs):
-        return teye_eval(vname+cmd, l=attrs)
+        return teye_eval(vname+cmd, g=attrs)
 
     def _lib_func(self, vname, cmd, params, attrs):
         func = attrs['numpy']
         for name in cmd.split('~'):
             func = getattr(func, name)
         newattrs = temp_attrs(attrs, [('_f_', func)])
-        output = teye_eval('_f_(%s)'%params, l=newattrs)
+        output = teye_eval('_f_(%s)'%params, g=newattrs)
         if output is not None:
             return output
         else:
@@ -198,9 +208,9 @@ class NumpyArrayData(NumpyMixin, ValueData):
 
     def __init__(self, datasrc, args, attrs):
         if args:
-            self.data = teye_eval('numpy.asarray(%s, %s)'%(datasrc, args), l=attrs)
+            self.data = teye_eval('numpy.asarray(%s, %s)'%(datasrc, args), g=attrs)
         else:
-            self.data = teye_eval('numpy.asarray(%s)'%datasrc, l=attrs)
+            self.data = teye_eval('numpy.asarray(%s)'%datasrc, g=attrs)
 
 class NumpyBuildData(NumpyMixin, BuildMixin, ValueData):
 
@@ -224,7 +234,7 @@ class NumpyTextData(NumpyMixin, FileData, RemoteDataMixin):
             kwargs = ''
             if args:
                 kwargs += ', %s'%args
-            self.data = teye_eval("numpy.genfromtxt('%s'%s)"%(datasrc, kwargs), l=attrs)
+            self.data = teye_eval("numpy.genfromtxt('%s'%s)"%(datasrc, kwargs), g=attrs)
         else:
             error_exit("Input argument syntax error: '%s, %s'"%(datasrc, args))
 
@@ -248,7 +258,7 @@ class CsvTextData(NumpyMixin, FileData, RemoteDataMixin):
 
             if args:
                 kwargs += ', %s'%args
-            self.data = teye_eval("numpy.genfromtxt('%s'%s)"%(datasrc, kwargs), l=attrs)
+            self.data = teye_eval("numpy.genfromtxt('%s'%s)"%(datasrc, kwargs), g=attrs)
         else:
             error_exit("Input argument syntax error: '%s, %s'"%(datasrc, args))
 

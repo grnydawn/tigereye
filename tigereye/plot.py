@@ -8,7 +8,7 @@ import re
 
 from .error import UsageError
 from .util import (error_exit, teye_eval, teye_exec, temp_attrs,
-    parse_kwargs)
+    parse_funcargs)
 
 _re_ax_colon = re.compile(r'(?P<ax>ax\d*)\s*:\s*(?P<others>.*)')
 _re_ax_equal = re.compile(r'(?P<ax>ax\d*)\s*=\s*(?P<others>.*)')
@@ -48,7 +48,7 @@ def gen_plot(args, attrs):
             else:
                 pname = plotarg[:poscomma]
                 pargs = plotarg[poscomma+1:]
-                plot_handle = teye_eval('%s.%s(%s)'%(ax, pname, pargs), l=attrs)
+                plot_handle = teye_eval('%s.%s(%s)'%(ax, pname, pargs), g=attrs)
 
                 try:
                     for p in plot_handle:
@@ -68,33 +68,33 @@ def axes_main_functions(args, attrs):
     # title setting
     for title_arg in args.title:
         ax, title = _get_axis(title_arg)
-        teye_eval('%s.set_title(%s)'%(ax, title), l=attrs)
+        teye_eval('%s.set_title(%s)'%(ax, title), g=attrs)
 
 
     for xaxis_arg in args.xaxis:
         ax, xaxis = _get_axis(xaxis_arg)
 
         set_xfuncs =  dict((x, getattr(attrs[ax], x)) for x in dir(attrs[ax]) if x.startswith('set_x'))
-        parsed_args = parse_kwargs({}, xaxis, attrs)
+        vargs, kwargs = parse_funcargs(xaxis, attrs)
 
         for name, func in set_xfuncs.items():
-            funckey = name[5:]
-            if name[5:] in parsed_args:
-                func_args = dict(parsed_args)
-                value = func_args.pop(name[5:])
+            funckey = name[5:] # set_x functions
+            if funckey in kwargs:
+                func_args = dict(kwargs)
+                value = func_args.pop(funckey)
                 func(value, **func_args)
 
     for yaxis_arg in args.yaxis:
         ax, yaxis = _get_axis(yaxis_arg)
 
         set_yfuncs =  dict((y, getattr(attrs[ax], y)) for y in dir(attrs[ax]) if y.startswith('set_y'))
-        parsed_args = parse_kwargs({}, yaxis, attrs)
+        vargs, kwargs = parse_funcargs(yaxis, attrs)
 
         for name, func in set_yfuncs.items():
             funckey = name[5:]
-            if name[5:] in parsed_args:
-                func_args = dict(parsed_args)
-                value = func_args.pop(name[5:])
+            if funckey in kwargs:
+                func_args = dict(kwargs)
+                value = func_args.pop(funckey)
                 func(value, **func_args)
 
     # grid setting
@@ -107,7 +107,7 @@ def axes_main_functions(args, attrs):
         for grid_arg in args.grid:
             if grid_arg:
                 ax, grid = _get_axis(grid_arg)
-                teye_eval('%s.grid(%s)'%(ax, grid), l=attrs)
+                teye_eval('%s.grid(%s)'%(ax, grid), g=attrs)
 
     # legend setting 
     if args.l:
@@ -119,24 +119,26 @@ def axes_main_functions(args, attrs):
         for legend_arg in args.legend:
             if legend_arg:
                 ax, legend = _get_axis(legend_arg)
-                teye_eval('%s.legend(%s)'%(ax, legend), l=attrs)
+                teye_eval('%s.legend(%s)'%(ax, legend), g=attrs)
 
 def teye_plot(args, attrs):
 
     # matplotlib settings
-
     # pages setting
     if args.pages:
-        num_pages, others = _get_name(args.pages)
-        attrs['num_pages'] = int(num_pages)
-        if others:
-            page_args = parse_kwargs({}, others, attrs)
-            for key, value in page_args.items():
-                if key == 'pdf_merge' and value:
-                    from matplotlib.backends.backend_pdf import PdfPages
-                    attrs['_pdf_merge'] = PdfPages
-                else:
-                    attrs[key] = page_args[key]
+        vargs, kwargs = parse_funcargs(args.pages, attrs)
+
+        if vargs:
+            attrs['num_pages'] = vargs[-1]
+        else:
+            attrs['num_pages'] = 1
+
+        for key, value in kwargs.items():
+            if key == 'pdf_merge' and value:
+                from matplotlib.backends.backend_pdf import PdfPages
+                attrs['_pdf_merge'] = PdfPages
+            else:
+                attrs[key] = value
     else:
         attrs['num_pages'] = 1
 
@@ -146,7 +148,7 @@ def teye_plot(args, attrs):
 
         # figure setting
         if args.figure:
-            attrs['figure'] = teye_eval('pyplot.figure(%s)'%args.figure, l=attrs)
+            attrs['figure'] = teye_eval('pyplot.figure(%s)'%args.figure, g=attrs)
         else:
             attrs['figure'] = attrs['pyplot'].figure()
 
@@ -156,7 +158,7 @@ def teye_plot(args, attrs):
             for ax_arg in args.ax:
                 axname, others = _get_axis(ax_arg, delimiter='=')
                 if axname:
-                    attrs[axname] = teye_eval('figure.add_subplot(%s)'%others, l=attrs)
+                    attrs[axname] = teye_eval('figure.add_subplot(%s)'%others, g=attrs)
                 else:
                     raise UsageError('Wrong axis option: %s'%ax_arg)
         else:
@@ -183,9 +185,9 @@ def teye_plot(args, attrs):
             ax, arg = _get_axis(axes_arg)
             axes = arg.split(',', 1)
             if len(axes) == 1:
-                teye_eval('ax.%s()'%axes[0], l=attrs)
+                teye_eval('ax.%s()'%axes[0], g=attrs)
             else:
-                teye_eval('%s.%s(%s)'%(ax, axes[0], axes[1]), l=attrs)
+                teye_eval('%s.%s(%s)'%(ax, axes[0], axes[1]), g=attrs)
 
         if not args.axes and not attrs['plots']:
             if len(attrs['_data_objects']) > 0:
@@ -200,16 +202,16 @@ def teye_plot(args, attrs):
                 arglist = saveargs.split(',', 1)
                 if '_pdf_merge' in attrs:
                     if '_pdf_pages' not in attrs:
-                        teye_exec('_pdf_pages = _pdf_merge(%s)'%arglist[0], l=attrs)
-                    teye_exec('_pdf_pages.savefig()', l=attrs)
+                        teye_exec('_pdf_pages = _pdf_merge(%s)'%arglist[0], g=attrs)
+                    teye_exec('_pdf_pages.savefig()', g=attrs)
                 else:
-                    teye_exec('pyplot.savefig(%s)'%saveargs, l=attrs)
+                    teye_exec('pyplot.savefig(%s)'%saveargs, g=attrs)
 
         # displyaing an image on screen
         if not args.noshow:
             attrs['pyplot'].show()
 
-            attrs['pyplot'].close()
+        attrs['pyplot'].close()
 
     # multi-page closing
     if '_pdf_pages' in attrs:

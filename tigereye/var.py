@@ -7,6 +7,7 @@ import sys
 import re
 
 from .util import teye_eval, teye_exec, _DEBUG
+from .error import UsageError
 
 _re_did = re.compile(r'(?P<did>d\d+)(?P<others>.*)')
 _re_var = re.compile(r'(?P<name>\w+)\s*=\s*(?P<others>.*)')
@@ -48,7 +49,7 @@ def teye_var(args, attrs):
 #                    handler.get_data(vname, formula[6:].strip(), attrs)
 #                else:
 #                    try:
-#                        attrs[vname] = teye_eval(formula, l=attrs)
+#                        attrs[vname] = teye_eval(formula, g=attrs)
 #                    except:
 #                        raise Exception('Unknown %s argument format: %s'%(
 #                            vname, formula))
@@ -67,18 +68,18 @@ def teye_var(args, attrs):
             handler.get_data(vname, formula[6:].strip(), attrs)
         else:
             try:
-                attrs[vname] = teye_eval(formula, l=attrs)
+                attrs[vname] = teye_eval(formula, g=attrs)
             except:
                 raise Exception('Unknown %s argument format: %s'%(
                     vname, formula))
 
     if args.calc:
         for calc in args.calc:
-            teye_exec(calc, l=attrs)
+            teye_exec(calc, g=attrs)
 
     if args.value:
         for pval in args.value:
-            val = teye_eval(pval, l=attrs)
+            val = teye_eval(pval, g=attrs)
             print("Value of '%s' = %s"%(pval, str(val)))
 
     if args.noplot:

@@ -42,6 +42,7 @@ builtins = {
     'tuple': tuple,
     'float': float,
     'str': str,
+    'len': len,
 #    '': f,
 #    '': f,
 }
@@ -68,15 +69,20 @@ _DEBUG_LEVEL = 3 # 0: no debug, 1~3: higher is more debugging information
 
 PY3 = sys.version_info >= (3, 0)
 
-def teye_eval(expr, g={'__builtins__': builtins}, l={}):
+def teye_eval(expr, g={}, l={}):
     try:
-        return eval(expr, g, l)
+        g['__builtins__'] = builtins
+        output = eval(expr, g, l)
+        g.update(l)
+        return output
     except NameError as err:
         raise UsageError(str(err))
 
-def teye_exec(obj, g={'__builtins__': builtins}, l={}):
+def teye_exec(obj, g={}, l={}):
     try:
+        g['__builtins__'] = builtins
         exec(obj, g, l)
+        g.update(l)
     except NameError as err:
         raise UsageError(str(err))
 
@@ -92,11 +98,9 @@ def temp_attrs(attrs, add_attrs):
     new_attrs.update(add_attrs)
     return new_attrs
 
-def parse_kwargs(kwdefaults, kwargs_str, attrs):
+def parse_funcargs(args_str, attrs):
 
-    def _parse(**kw_str):
-        return kw_str
+    def _parse(*args, **kw_str):
+        return args, kw_str
 
-    kwargs = teye_eval('_p(%s)'%kwargs_str, l=temp_attrs(attrs, [('_p', _parse)]))
-    kwdefaults.update(kwargs)
-    return kwdefaults
+    return teye_eval('_p(%s)'%args_str, l=temp_attrs(attrs, [('_p', _parse)]))
