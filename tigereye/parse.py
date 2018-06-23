@@ -3,8 +3,23 @@
 
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
+import os
 import shlex
 import argparse
+import tempfile
+
+from .util import PY3
+
+try:
+    if PY3:
+        from urllib.request import urlopen
+        from urllib.parse import urlparse
+    else:
+        from urllib2 import urlopen
+        from urlparse import urlparse
+    urllib_imported = True
+except ImportError as e:
+    urllib_imported = False
 
 class ArgParse(object):
 
@@ -70,16 +85,35 @@ class ArgParse(object):
 
     def _load_template(self, template):
 
-        lines = []
-        with open(template, 'rb') as f:
-            for line in f:
+        data = None
+
+        if os.path.isfile(template):
+            with open(template, 'rb') as f:
+                data = f.readlines()
+        elif urllib_imported:
+            try:
+                if urlparse(template).netloc:
+                    f = urlopen(template)
+                    data = f.readlines()
+                    f.close()
+            except HTTPError, e:
+                error_exit("HTTP Error: %s %s"%(str(e.code), template))
+            except URLError, e:
+                error_exit("URL Error: %s %s"%(str(e.reason), template))
+        else:
+            error_exit("Input template syntax error: '%s'"%template)
+
+        if data:
+            lines = []
+            for line in data:
                 line = line.strip()
                 if line and line[-1] == '\\':
                     line = line[:-1]
                 lines.append(line)
-
-        cmdline = ' '.join(lines)
-        return teye_parse(shlex.split(cmdline), None)
+            cmdline = ' '.join(lines)
+            return teye_parse(shlex.split(cmdline), None)
+        else:
+            return None
 
     def _handle_template(self, argv):
 
