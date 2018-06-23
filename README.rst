@@ -32,6 +32,11 @@ Tigereye is a portable command-line utility for creating plots from various sour
 Installation
 ------------
 
+Dependencies
+============
+
+Tigereye extensively uses matplotlib_ and numpy_. Before using tigereye, the two Python package needs to be installed.
+
 Installing from github repository
 =================================
 
