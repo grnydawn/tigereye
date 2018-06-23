@@ -89,6 +89,15 @@ Data is generated using numpy.
         -y "label='Y', fontsize=12" \
         -p "plot, varx, vary, label='line1'"
 
+Plot is generated using a template .
+====================================
+
+.. code-block:: text
+
+    $ tigereye \
+        -i https://raw.githubusercontent.com/grnydawn/tigereye/master/template/basic/sample1.tgr \
+        -t "'My Plot'"
+
 Data is read from a local file.
 ===============================
 
@@ -143,15 +152,6 @@ Multi-page PDF file is generated .
         --noshow \
         -g \
         -l
-
-Plot is generated using a template .
-====================================
-
-.. code-block:: text
-
-    $ tigereye \
-        -i https://raw.githubusercontent.com/grnydawn/tigereye/master/template/basic/sample1.tgr \
-        -t "'My Plot'"
 
 --------------
 Documentation
