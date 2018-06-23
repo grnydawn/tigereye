@@ -32,11 +32,6 @@ Tigereye is a portable command-line utility for creating plots from various sour
 Installing
 ----------
 
-Installing using pip
-====================
-
-    T.B.D.
-
 Installing from github repository
 =================================
 
@@ -46,6 +41,11 @@ Installing from github repository
     $ cd tigereye
     $ python setup.py install
     $ tigereye --version
+
+Installing using pip
+====================
+
+    T.B.D.
 
 ----------------
 Simple examples
