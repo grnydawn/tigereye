@@ -28,9 +28,17 @@ What is tigereye?
 
 Tigereye is a portable command-line utility for creating plots from various sources of data.  It advocates incremental plotting that you can immediately see the effect of changes made in command-line. Until satisfied, you can generate plots through a very quick cycle of "change-run-see". In addition, tigereye can read data of various formats, compactly modify them on command-line, and output modified data as the form of plots as well as texts. Tigereye also supports importing both of plots and data that could be created independently.
 
----------------------------------
+----------
+Installing
+----------
+
+Installing using pip
+====================
+
+    T.B.D.
+
 Installing from github repository
----------------------------------
+=================================
 
 .. code-block:: text
 
