@@ -54,24 +54,25 @@ def teye_var(args, attrs):
 #                        raise Exception('Unknown %s argument format: %s'%(
 #                            vname, formula))
 
-    for vname, formula in _get_var(args.variable):
-        if formula[0]=='d':
-            match = _re_did.match(formula)
-            if match:
-                did = match.group('did')
-                others = match.group('others')
-                if others and others[0] == '.':
-                    others = others[1:]
-                attrs[did].get_data(vname, others, attrs)
-        elif formula[0:5]=='numpy':
-            handler = attrs['_build_handlers']['numpybuild']()
-            handler.get_data(vname, formula[6:].strip(), attrs)
-        else:
-            try:
-                attrs[vname] = teye_eval(formula, g=attrs)
-            except:
-                raise Exception('Unknown %s argument format: %s'%(
-                    vname, formula))
+    if args.variable:
+        for vname, formula in _get_var(args.variable):
+            if formula[0]=='d':
+                match = _re_did.match(formula)
+                if match:
+                    did = match.group('did')
+                    others = match.group('others')
+                    if others and others[0] == '.':
+                        others = others[1:]
+                    attrs[did].get_data(vname, others, attrs)
+            elif formula[0:5]=='numpy':
+                handler = attrs['_build_handlers']['numpybuild']()
+                handler.get_data(vname, formula[6:].strip(), attrs)
+            else:
+                try:
+                    attrs[vname] = teye_eval(formula, g=attrs)
+                except:
+                    raise Exception('Unknown %s argument format: %s'%(
+                        vname, formula))
 
     if args.calc:
         for calc in args.calc:

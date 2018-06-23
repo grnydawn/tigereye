@@ -8,6 +8,7 @@ import os
 import re
 import shlex
 import abc
+import tempfile
 
 from .error import UsageError
 from .util import PY3, temp_attrs, teye_eval, teye_exec, error_exit
@@ -182,7 +183,9 @@ class RemoteDataMixin(object):
         except URLError, e:
             error_exit("URL Error: %s %s"%(str(e.reason), datasrc))
 
-        return data
+        f = tempfile.NamedTemporaryFile(delete=False)
+        f.write(data)
+        return f.name
 
 class BuildMixin(object):
 
@@ -240,7 +243,9 @@ class NumpyTextData(NumpyMixin, FileData, RemoteDataMixin):
             kwargs = ''
             if args:
                 kwargs += ', %s'%args
-            self.data = teye_eval("numpy.genfromtxt('%s'%s)"%(datasrc, kwargs), g=attrs)
+
+            import pdb; pdb.set_trace()
+            self.data = teye_eval("numpy.genfromtxt('%s'%s)"%(fname, kwargs), g=attrs)
         else:
             error_exit("Input argument syntax error: '%s, %s'"%(datasrc, args))
 
@@ -264,7 +269,7 @@ class CsvTextData(NumpyMixin, FileData, RemoteDataMixin):
 
             if args:
                 kwargs += ', %s'%args
-            self.data = teye_eval("numpy.genfromtxt('%s'%s)"%(datasrc, kwargs), g=attrs)
+            self.data = teye_eval("numpy.genfromtxt('%s'%s)"%(fname, kwargs), g=attrs)
         else:
             error_exit("Input argument syntax error: '%s, %s'"%(datasrc, args))
 
@@ -297,40 +302,42 @@ def teye_load(args, attrs):
     _data_objects = []
 
     # read data files
-    srcfmts = [None for _ in range(len(args.data_sources))]
-    global_fmt = None
+    if args.data_sources:
+        srcfmts = [None for _ in range(len(args.data_sources))]
+        global_fmt = None
 
-    # format: 0:name, ... or name, ...
-    if args.data_format:
-        for fmt in args.data_format:
-            match = _re_datafmt.match(fmt)
-            if match:
-                did, fmt, others = match.group('data'), match.group('format'), match.group('others')
-                handler = _data_handlers[fmt]
-                if did:
-                    srcfmts[int(did)] = (handler, others)
+        # format: 0:name, ... or name, ...
+        if args.data_format:
+            for fmt in args.data_format:
+                match = _re_datafmt.match(fmt)
+                if match:
+                    did, fmt, others = match.group('data'), match.group('format'), match.group('others')
+                    handler = _data_handlers[fmt]
+                    if did:
+                        srcfmts[int(did)] = (handler, others)
+                    else:
+                        global_fmt = (handler, others)
                 else:
-                    global_fmt = (handler, others)
-            else:
-                print('Warning: source format syntax error (ignored): %s'%fmt)
+                    print('Warning: source format syntax error (ignored): %s'%fmt)
 
-    if global_fmt is not None:
-        for idx in range(len(args.data_sources)):
+        if global_fmt is not None:
+            for idx in range(len(args.data_sources)):
+                if srcfmts[idx] is None:
+                    srcfmts[idx] = global_fmt
+
+        for idx, data_source in enumerate(args.data_sources):
+
             if srcfmts[idx] is None:
-                srcfmts[idx] = global_fmt
+                data = _select_srcfmt(data_source, attrs)
+            else:
+                data = srcfmts[idx][0](data_source, srcfmts[idx][1], attrs)
 
-    for idx, data_source in enumerate(args.data_sources):
+            if data:
+                attrs['d%d'%idx] = data
+                _data_objects.append(data)
+            else:
+                raise UsageError('"%s" is not loaded correctly.'%data_source)
 
-        if srcfmts[idx] is None:
-            data = _select_srcfmt(data_source, attrs)
-        else:
-            data = srcfmts[idx][0](data_source, srcfmts[idx][1], attrs)
-
-        if data:
-            attrs['d%d'%idx] = data
-            _data_objects.append(data)
-        else:
-            raise UsageError('"%s" is not loaded correctly.'%data_source)
+    attrs['_build_handlers'] = _build_handlers
 
     attrs['_data_objects'] = _data_objects
-    attrs['_build_handlers'] = _build_handlers

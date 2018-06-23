@@ -14,6 +14,7 @@ curdir = os.path.dirname(os.path.realpath(__file__))
 numpy_text_data1 = "%s/data/numpy_text_data1.csv"%curdir
 csv_text_data1 = "%s/data/csv_text_data1.csv"%curdir
 remote_csv_data1 = "https://raw.githubusercontent.com/grnydawn/tigereye/master/data/simple.csv"
+template_sampel1 = "%s/templates/sample1.tgr"%curdir
 
 def ttest_main():
     assert main(["[1,2,3]"]) == 0
@@ -131,6 +132,12 @@ def test_remote_csv():
         #"--noplot",
         "--save", "'test.pdf'",
 
+    ]
+    assert main(argv) == 0
+
+def ttest_template1():
+    argv = [
+        "-i", "%s"%template_sampel1,
     ]
     assert main(argv) == 0
 

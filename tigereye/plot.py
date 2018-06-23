@@ -66,36 +66,42 @@ def axes_main_functions(args, attrs):
     #import inspect
 
     # title setting
-    for title_arg in args.title:
-        ax, title = _get_axis(title_arg)
-        teye_eval('%s.set_title(%s)'%(ax, title), g=attrs)
+    if args.title:
+        for title_arg in args.title:
+            ax, title = _get_axis(title_arg)
+            teye_eval('%s.set_title(%s)'%(ax, title), g=attrs)
 
 
-    for xaxis_arg in args.xaxis:
-        ax, xaxis = _get_axis(xaxis_arg)
+    if args.xaxis:
+        for xaxis_arg in args.xaxis:
+            ax, xaxis = _get_axis(xaxis_arg)
 
-        set_xfuncs =  dict((x, getattr(attrs[ax], x)) for x in dir(attrs[ax]) if x.startswith('set_x'))
-        vargs, kwargs = parse_funcargs(xaxis, attrs)
+            set_xfuncs =  dict((x, getattr(attrs[ax], x)) for x in dir(attrs[ax]) if x.startswith('set_x'))
+            vargs, kwargs = parse_funcargs(xaxis, attrs)
 
-        for name, func in set_xfuncs.items():
-            funckey = name[5:] # set_x functions
-            if funckey in kwargs:
-                func_args = dict(kwargs)
-                value = func_args.pop(funckey)
-                func(value, **func_args)
+            for name, func in set_xfuncs.items():
+                funckey = name[5:] # set_x functions
+                if funckey in kwargs:
+                    func_args = dict(kwargs)
+                    value = func_args.pop(funckey)
+                    func(value, **func_args)
 
-    for yaxis_arg in args.yaxis:
-        ax, yaxis = _get_axis(yaxis_arg)
+    if args.yaxis:
+        for yaxis_arg in args.yaxis:
+            ax, yaxis = _get_axis(yaxis_arg)
 
-        set_yfuncs =  dict((y, getattr(attrs[ax], y)) for y in dir(attrs[ax]) if y.startswith('set_y'))
-        vargs, kwargs = parse_funcargs(yaxis, attrs)
+            set_yfuncs =  dict((y, getattr(attrs[ax], y)) for y in dir(attrs[ax]) if y.startswith('set_y'))
+            vargs, kwargs = parse_funcargs(yaxis, attrs)
 
-        for name, func in set_yfuncs.items():
-            funckey = name[5:]
-            if funckey in kwargs:
-                func_args = dict(kwargs)
-                value = func_args.pop(funckey)
-                func(value, **func_args)
+            for name, func in set_yfuncs.items():
+                funckey = name[5:]
+                if funckey in kwargs:
+                    func_args = dict(kwargs)
+                    value = func_args.pop(funckey)
+                    func(value, **func_args)
+
+    if args.zaxis:
+        pass
 
     # grid setting
     if args.g:
@@ -181,15 +187,15 @@ def teye_plot(args, attrs):
         axes_main_functions(args, attrs)
 
         # execute axes functions
-        for axes_arg in args.axes:
-            ax, arg = _get_axis(axes_arg)
-            axes = arg.split(',', 1)
-            if len(axes) == 1:
-                teye_eval('ax.%s()'%axes[0], g=attrs)
-            else:
-                teye_eval('%s.%s(%s)'%(ax, axes[0], axes[1]), g=attrs)
-
-        if not args.axes and not attrs['plots']:
+        if args.axes:
+            for axes_arg in args.axes:
+                ax, arg = _get_axis(axes_arg)
+                axes = arg.split(',', 1)
+                if len(axes) == 1:
+                    teye_eval('ax.%s()'%axes[0], g=attrs)
+                else:
+                    teye_eval('%s.%s(%s)'%(ax, axes[0], axes[1]), g=attrs)
+        elif not attrs['plots']:
             if len(attrs['_data_objects']) > 0:
                 for data_obj in attrs['_data_objects']:
                     attrs['ax'].plot(data_obj.get_data('', '', attrs))
