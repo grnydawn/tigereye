@@ -118,7 +118,7 @@ def ttest_axis_opt():
     assert main(argv) == 0
 
 
-def test_remote_csv():
+def ttest_remote_csv():
     argv = [
         "%s"%remote_csv_data1, "['Page1', 'Page2']",
         "-v", "l=d0",
@@ -135,9 +135,10 @@ def test_remote_csv():
     ]
     assert main(argv) == 0
 
-def ttest_template1():
+def test_template1():
     argv = [
         "-i", "%s"%template_sampel1,
+        "-t", "'My Plot'",
     ]
     assert main(argv) == 0
 

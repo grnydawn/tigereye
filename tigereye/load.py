@@ -244,7 +244,6 @@ class NumpyTextData(NumpyMixin, FileData, RemoteDataMixin):
             if args:
                 kwargs += ', %s'%args
 
-            import pdb; pdb.set_trace()
             self.data = teye_eval("numpy.genfromtxt('%s'%s)"%(fname, kwargs), g=attrs)
         else:
             error_exit("Input argument syntax error: '%s, %s'"%(datasrc, args))
