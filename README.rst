@@ -26,7 +26,7 @@ A reusable data-manipulation and plotting tool
 What is tigereye?
 -----------------
 
-Tigereye is a portable command-line utility for creating plots from various sources of data.  It advocates incremental plotting that you can immediately see the effect of changes made in command-line. Until satisfied, you can generate plots through a very quick cycle of "change-run-see". In addition, tigereye can read data from various formats and compactly modify them for plotting in command-line. Tigereye also supports importing data and plots that could be created independently.
+Tigereye is a portable command-line utility for creating plots from various sources of data.  It advocates incremental plotting that you can immediately see the effect of changes made in command-line. Until satisfied, you can generate plots through a very quick cycle of "change-run-see". In addition, tigereye can read data of various formats, compactly modify them on command-line, and output modified data as the form of plots as well as texts. Tigereye also supports importing plots as well as data that could be created independently.
 
 ---------------------------------
 Installing from github repository
@@ -48,14 +48,14 @@ The simplest tigereye plot
 
 .. code-block:: text
 
-    $ tigereye [1,2]
+    $ tigereye [1,2,4]
 
 A title is added.
 =================
 
 .. code-block:: text
 
-    $ tigereye [1,2] \
+    $ tigereye [1,2,4] \
         -t "'Sample Plot', fontsize=16"
 
 Labels are added into x and y axes.
@@ -63,7 +63,7 @@ Labels are added into x and y axes.
 
 .. code-block:: text
 
-    $ tigereye [1,2] \
+    $ tigereye [1,2,4] \
         -t "'Sample Plot', fontsize=16" \
         -x "label='X', fontsize=12" \
         -y "label='Y', fontsize=12"
@@ -141,7 +141,9 @@ Plot is generated using a template .
 
 .. code-block:: text
 
-    T.B.D.
+    $ tigereye \
+        -i https://raw.githubusercontent.com/grnydawn/tigereye/master/template/basic/sample1.tgr \
+        -t "'My Plot'"
 
 --------------
 Documentation
