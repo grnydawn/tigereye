@@ -163,17 +163,17 @@ Multi-page PDF file is generated .
         -g \
         -l
 
---------------
-Documentation
---------------
+---------------
+Further reading
+---------------
 
     T.B.D.
 
--------
-Credits
--------
+--------------
+Acknowledgment
+--------------
 
-Tigereye extensively uses matplotlib_ and numpy_.
+Tigereye extensively uses matplotlib_ and numpy_. The packages have vastly accepted by community with reasons. Tigereye could be considered as a light wrapper of several well-known Python packages including matplotlib_ and numpy_ that works conviniently for data manipulation and plotting.
 
 .. _matplotlib: https://matplotlib.org/
 .. _numpy: http://www.numpy.org/
