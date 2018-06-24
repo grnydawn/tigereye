@@ -6,12 +6,12 @@ Welcome to tigereye's documentation!
    :caption: Contents:
 
    Getting started <readme>
-   installation
-   usage
+   Installation <installation>
+   User's guide <uguide>
+   Developer's guide <dguide>
    Modules <modules>
-   contributing
-   authors
-   history
+   Contributing <contributing>
+   Authors <authors>
 
 Indices and tables
 ==================

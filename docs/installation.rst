@@ -34,17 +34,18 @@ You can either clone the public repository:
 
     $ git clone git://github.com/grnydawn/tigereye
 
-Or download the `tarball`_:
-
-.. code-block:: console
-
-    $ curl  -OL https://github.com/grnydawn/tigereye/tarball/master
-
 Once you have a copy of the source, you can install it with:
 
 .. code-block:: console
 
+    $ cd tigereye
     $ python setup.py install
+
+You can check if tigereye is installed correclty by executing following command. If installed successfully, three numbers similar to "0.1.2" will be displayed on screen.
+
+.. code-block:: console
+
+    $ tigereye --version
 
 
 .. _Github repo: https://github.com/grnydawn/tigereye
