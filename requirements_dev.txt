@@ -8,6 +8,6 @@ coverage==4.5.1
 sphinx==1.7.1
 twine
 future
-
+sphinx_rtd_theme
 pytest==3.4.2
 pytest-runner==2.11.1

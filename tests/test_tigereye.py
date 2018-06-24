@@ -16,11 +16,11 @@ csv_text_data1 = "%s/data/csv_text_data1.csv"%curdir
 remote_csv_data1 = "https://raw.githubusercontent.com/grnydawn/tigereye/master/data/simple.csv"
 template_sampel1 = "%s/templates/sample1.tgr"%curdir
 
-def ttest_main():
+def test_main():
     assert main(["[1,2,3]"]) == 0
 
 
-def ttest_array_in_cmdline():
+def test_array_in_cmdline():
     argv = [
         "[[1,2,3], [1,4,9]]", "[4,5,6]",
         "-v", "l1=d1",
@@ -34,7 +34,7 @@ def ttest_array_in_cmdline():
     ]
     assert main(argv) == 0
 
-def ttest_numpy_data():
+def test_numpy_data():
     argv = [
         "-v", "l1=numpy.arange(3)",
         "-v", "l2=numpy.random~rand(3)",
@@ -48,7 +48,7 @@ def ttest_numpy_data():
     ]
     assert main(argv) == 0
 
-def ttest_numpy_text():
+def test_numpy_text():
     argv = [
         "%s"%numpy_text_data1,
         "--data-format", "numpytext, delimiter=' '",
@@ -59,7 +59,7 @@ def ttest_numpy_text():
     ]
     assert main(argv) == 0
 
-def ttest_csv_file():
+def test_csv_file():
     argv = [
         "%s"%csv_text_data1,
         "-v", "l1=d0[1,:]",
@@ -77,7 +77,7 @@ def ttest_csv_file():
     ]
     assert main(argv) == 0
 
-def ttest_axis_opt():
+def test_axis_opt():
     argv = [
         "[1,2,3]", "[4,5,6]",
         "-v", "l1=d0",
@@ -96,7 +96,7 @@ def ttest_axis_opt():
     ]
     assert main(argv) == 0
 
-def ttest_axis_opt():
+def test_axis_opt():
     argv = [
         "[1,2,3]", "[4,5,6]",
         "-v", "l1=d0",
@@ -118,7 +118,7 @@ def ttest_axis_opt():
     assert main(argv) == 0
 
 
-def ttest_remote_csv():
+def test_remote_csv():
     argv = [
         "%s"%remote_csv_data1, "['Page1', 'Page2']",
         "-v", "l=d0",

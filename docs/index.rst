@@ -5,10 +5,10 @@ Welcome to tigereye's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   readme
+   Getting started <readme>
    installation
    usage
-   modules
+   Modules <modules>
    contributing
    authors
    history
