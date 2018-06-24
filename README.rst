@@ -19,7 +19,7 @@ tigereye
 A reusable data-manipulation and plotting tool
 
 * Free software: MIT license
-* Documentation: https://tigereye.readthedocs.io. (T.B.D.)
+* Documentation: https://grnydawn.github.io/tigereyedocs.
 
 
 -----------------
@@ -169,7 +169,7 @@ Multi-page PDF file is generated .
 Further reading
 ---------------
 
-    T.B.D.
+    tigereye_ Documentation
 
 --------------
 Acknowledgment
@@ -179,3 +179,4 @@ Tigereye extensively uses matplotlib_ and numpy_. The packages have vastly accep
 
 .. _matplotlib: https://matplotlib.org/
 .. _numpy: http://www.numpy.org/
+.. _tigereye: https://grnydawn.github.io/tigereyedocs
