@@ -42,6 +42,13 @@ Tigereye extensively uses matplotlib_ and numpy_. Before using tigereye, the two
     $ python -c "import numpy; print(numpy.__version__)"
     $ python -c "import matplotlib; print(matplotlib.__version__)"
 
+Installing using pip
+====================
+
+.. code-block:: text
+
+    $ pip install tigereye
+
 Installing from github repository
 =================================
 
@@ -51,15 +58,6 @@ Installing from github repository
     $ cd tigereye
     $ python setup.py install
     $ tigereye --version
-
-Installing using pip
-====================
-
-Temporary, we will use test.pypi.org for pip installation.
-
-.. code-block:: text
-
-    $ pip install --index-url https://test.pypi.org/simple/ --no-cache-dir tigereye
 
 ----------------
 Simple examples
