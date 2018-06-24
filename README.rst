@@ -55,7 +55,11 @@ Installing from github repository
 Installing using pip
 ====================
 
-    T.B.D.
+Temporary, we will use test.pypi.org for pip installation.
+
+.. code-block:: text
+
+    $ pip install --index-url https://test.pypi.org/simple/ --no-cache-dir tigereye
 
 ----------------
 Simple examples

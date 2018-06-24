@@ -89,3 +89,9 @@ install: clean ## install the package to the active Python's site-packages
 dev-install: clean ## install the package locally
 	python setup.py develop
 
+testrelease:
+	#python -m pip install --upgrade setuptools wheel
+	#python -m pip install  --upgrade twine
+	rm -rf dist
+	python setup.py sdist bdist_wheel
+	twine upload --repository-url https://test.pypi.org/legacy/ dist/*
