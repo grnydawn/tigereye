@@ -70,18 +70,20 @@ _DEBUG_LEVEL = 3 # 0: no debug, 1~3: higher is more debugging information
 
 PY3 = sys.version_info >= (3, 0)
 
-def teye_eval(expr, g={}, l={}):
+def teye_eval(expr, g={}):
     try:
         g['__builtins__'] = builtins
+        l = {}
         output = eval(expr, g, l)
         g.update(l)
         return output
     except NameError as err:
         raise UsageError(str(err))
 
-def teye_exec(obj, g={}, l={}):
+def teye_exec(obj, g={}):
     try:
         g['__builtins__'] = builtins
+        l = {}
         exec(obj, g, l)
         g.update(l)
     except NameError as err:
@@ -104,4 +106,4 @@ def parse_funcargs(args_str, attrs):
     def _parse(*args, **kw_str):
         return args, kw_str
 
-    return teye_eval('_p(%s)'%args_str, l=temp_attrs(attrs, [('_p', _parse)]))
+    return teye_eval('_p(%s)'%args_str, g=temp_attrs(attrs, [('_p', _parse)]))

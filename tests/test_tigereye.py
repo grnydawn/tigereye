@@ -16,11 +16,25 @@ csv_text_data1 = "%s/data/csv_text_data1.csv"%curdir
 remote_csv_data1 = "https://raw.githubusercontent.com/grnydawn/tigereye/master/data/simple.csv"
 template_sampel1 = "%s/templates/sample1.tgr"%curdir
 
-def test_main():
-    assert main(["[1,2,3]"]) == 0
+@pytest.fixture(scope="session")
+def tempdir(tmpdir_factory):
+    return tmpdir_factory.getbasetemp()
 
+#def test_main():
+#    assert main(["[1,2,3]"]) == 0
 
-def test_array_in_cmdline():
+def _main(argv, tempdir):
+
+    outfile = '%s/test.pdf'%tempdir
+    if os.path.isfile(outfile):
+        os.remove(outfile)
+
+    argv.extend(["-s", "'%s'"%outfile, "--noshow"])
+    main(argv)
+
+    assert os.path.isfile(outfile)
+
+def test_array_in_cmdline(tempdir):
     argv = [
         "[[1,2,3], [1,4,9]]", "[4,5,6]",
         "-v", "l1=d1",
@@ -32,9 +46,10 @@ def test_array_in_cmdline():
         "-y", "label='ylabel'",
         "-p", "plot, l1, l2",
     ]
-    assert main(argv) == 0
 
-def test_numpy_data():
+    _main(argv, tempdir)
+
+def test_numpy_data(tempdir):
     argv = [
         "-v", "l1=numpy.arange(3)",
         "-v", "l2=numpy.random~rand(3)",
@@ -46,9 +61,10 @@ def test_numpy_data():
         "-p", "scatter, l2, l1, label='t'",
         "-l",
     ]
-    assert main(argv) == 0
 
-def test_numpy_text():
+    _main(argv, tempdir)
+
+def test_numpy_text(tempdir):
     argv = [
         "%s"%numpy_text_data1,
         "--data-format", "numpytext, delimiter=' '",
@@ -57,9 +73,10 @@ def test_numpy_text():
         #"-d", "l1",
         #"--noplot",
     ]
-    assert main(argv) == 0
 
-def test_csv_file():
+    _main(argv, tempdir)
+
+def test_csv_file(tempdir):
     argv = [
         "%s"%csv_text_data1,
         "-v", "l1=d0[1,:]",
@@ -72,12 +89,12 @@ def test_csv_file():
         "--pages", "2",
         #"--pages", "2, pdf_merge=True",
         #"--noplot",
-        "--save", "'test.pdf'",
 
     ]
-    assert main(argv) == 0
 
-def test_axis_opt():
+    _main(argv, tempdir)
+
+def test_axis_opt(tempdir):
     argv = [
         "[1,2,3]", "[4,5,6]",
         "-v", "l1=d0",
@@ -94,9 +111,10 @@ def test_axis_opt():
         "-l",
         "-p", "plot, l1, l2, label='label'",
     ]
-    assert main(argv) == 0
 
-def test_axis_opt():
+    _main(argv, tempdir)
+
+def test_axis_opt(tempdir):
     argv = [
         "[1,2,3]", "[4,5,6]",
         "-v", "l1=d0",
@@ -115,10 +133,10 @@ def test_axis_opt():
         "-p", "ax1:plot, l1, l2, label='label'",
         "-p", "ax2:plot, l2, l1, label='label'",
     ]
-    assert main(argv) == 0
 
+    _main(argv, tempdir)
 
-def test_remote_csv():
+def test_remote_csv(tempdir):
     argv = [
         "%s"%remote_csv_data1, "['Page1', 'Page2']",
         "-v", "l=d0",
@@ -130,15 +148,15 @@ def test_remote_csv():
         #"--pages", "2",
         "--pages", "2, pdf_merge=True",
         #"--noplot",
-        "--save", "'test.pdf'",
-
     ]
-    assert main(argv) == 0
 
-def test_template1():
+    _main(argv, tempdir)
+
+def test_template1(tempdir):
     argv = [
         "-i", "%s"%template_sampel1,
         "-t", "'My Plot'",
     ]
-    assert main(argv) == 0
+
+    _main(argv, tempdir)
 

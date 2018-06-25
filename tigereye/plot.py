@@ -211,13 +211,13 @@ def teye_plot(args, attrs):
                         teye_exec('_pdf_pages = _pdf_merge(%s)'%arglist[0], g=attrs)
                     teye_exec('_pdf_pages.savefig()', g=attrs)
                 else:
-                    teye_exec('pyplot.savefig(%s)'%saveargs, g=attrs)
+                    teye_exec('figure.savefig(%s)'%saveargs, g=attrs)
 
         # displyaing an image on screen
         if not args.noshow:
-            attrs['pyplot'].show()
+            attrs['figure'].show()
 
-        attrs['pyplot'].close()
+        teye_exec('pyplot.close(figure)', g=attrs)
 
     # multi-page closing
     if '_pdf_pages' in attrs:
