@@ -7,7 +7,7 @@ from __future__ import (absolute_import, division,
 import re
 
 from .error import UsageError
-from .util import (error_exit, teye_eval, teye_exec, temp_attrs,
+from .util import (error_exit, teye_eval,
     parse_funcargs)
 
 _re_ax_colon = re.compile(r'(?P<ax>ax\d*)\s*:\s*(?P<others>.*)')
@@ -48,7 +48,7 @@ def gen_plot(args, attrs):
             else:
                 pname = plotarg[:poscomma]
                 pargs = plotarg[poscomma+1:]
-                plot_handle = teye_eval('%s.%s(%s)'%(ax, pname, pargs), g=attrs)
+                plot_handle = teye_eval('%s.%s(%s)'%(ax, pname, pargs), attrs)
 
                 try:
                     for p in plot_handle:
@@ -69,7 +69,7 @@ def axes_main_functions(args, attrs):
     if args.title:
         for title_arg in args.title:
             ax, title = _get_axis(title_arg)
-            teye_eval('%s.set_title(%s)'%(ax, title), g=attrs)
+            teye_eval('%s.set_title(%s)'%(ax, title), attrs)
 
 
     if args.xaxis:
@@ -113,7 +113,7 @@ def axes_main_functions(args, attrs):
         for grid_arg in args.grid:
             if grid_arg:
                 ax, grid = _get_axis(grid_arg)
-                teye_eval('%s.grid(%s)'%(ax, grid), g=attrs)
+                teye_eval('%s.grid(%s)'%(ax, grid), attrs)
 
     # legend setting 
     if args.l:
@@ -125,7 +125,7 @@ def axes_main_functions(args, attrs):
         for legend_arg in args.legend:
             if legend_arg:
                 ax, legend = _get_axis(legend_arg)
-                teye_eval('%s.legend(%s)'%(ax, legend), g=attrs)
+                teye_eval('%s.legend(%s)'%(ax, legend), attrs)
 
 def teye_plot(args, attrs):
 
@@ -154,7 +154,7 @@ def teye_plot(args, attrs):
 
         # figure setting
         if args.figure:
-            attrs['figure'] = teye_eval('pyplot.figure(%s)'%args.figure, g=attrs)
+            attrs['figure'] = teye_eval('pyplot.figure(%s)'%args.figure, attrs)
         else:
             attrs['figure'] = attrs['pyplot'].figure()
 
@@ -164,7 +164,7 @@ def teye_plot(args, attrs):
             for ax_arg in args.ax:
                 axname, others = _get_axis(ax_arg, delimiter='=')
                 if axname:
-                    attrs[axname] = teye_eval('figure.add_subplot(%s)'%others, g=attrs)
+                    attrs[axname] = teye_eval('figure.add_subplot(%s)'%others, attrs)
                 else:
                     raise UsageError('Wrong axis option: %s'%ax_arg)
         else:
@@ -192,9 +192,9 @@ def teye_plot(args, attrs):
                 ax, arg = _get_axis(axes_arg)
                 axes = arg.split(',', 1)
                 if len(axes) == 1:
-                    teye_eval('ax.%s()'%axes[0], g=attrs)
+                    teye_eval('ax.%s()'%axes[0], attrs)
                 else:
-                    teye_eval('%s.%s(%s)'%(ax, axes[0], axes[1]), g=attrs)
+                    teye_eval('%s.%s(%s)'%(ax, axes[0], axes[1]), attrs)
         elif not attrs['plots']:
             if len(attrs['_data_objects']) > 0:
                 for data_obj in attrs['_data_objects']:
@@ -208,16 +208,16 @@ def teye_plot(args, attrs):
                 arglist = saveargs.split(',', 1)
                 if '_pdf_merge' in attrs:
                     if '_pdf_pages' not in attrs:
-                        teye_exec('_pdf_pages = _pdf_merge(%s)'%arglist[0], g=attrs)
-                    teye_exec('_pdf_pages.savefig()', g=attrs)
+                        attrs['_pdf_pages'] =  teye_eval('_pdf_merge(%s)'%arglist[0], attrs)
+                    teye_eval('_pdf_pages.savefig()', attrs)
                 else:
-                    teye_exec('figure.savefig(%s)'%saveargs, g=attrs)
+                    teye_eval('figure.savefig(%s)'%saveargs, attrs)
 
         # displyaing an image on screen
         if not args.noshow:
             attrs['pyplot'].show()
 
-        teye_exec('pyplot.close(figure)', g=attrs)
+        teye_eval('pyplot.close(figure)', attrs)
 
     # multi-page closing
     if '_pdf_pages' in attrs:
