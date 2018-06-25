@@ -154,7 +154,6 @@ Multi-page PDF file is generated .
 
     $ tigereye https://raw.githubusercontent.com/grnydawn/tigereye/master/data/simple.csv \
         --data-format "numpytext, delimiter=','" \
-        -t "'Sample Plot', fontsize=16" \
         -x "label='X', fontsize=12" \
         -y "label='Y', fontsize=12" \
         --pages "len(d0), page_names=['Page-%d'%n for n in range(len(d0))], pdf_merge=True" \
