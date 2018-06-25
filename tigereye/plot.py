@@ -215,7 +215,7 @@ def teye_plot(args, attrs):
 
         # displyaing an image on screen
         if not args.noshow:
-            attrs['figure'].show()
+            attrs['pyplot'].show()
 
         teye_exec('pyplot.close(figure)', g=attrs)
 
