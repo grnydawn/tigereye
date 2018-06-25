@@ -31,7 +31,7 @@ def _get_name(arg):
     if match:
         return match.group('name'), match.group('others')
     else:
-        return '', arg
+        return arg, ''
 
 def gen_plot(args, attrs):
 
@@ -63,8 +63,6 @@ def gen_plot(args, attrs):
 
 def axes_main_functions(args, attrs):
 
-    #import inspect
-
     # title setting
     if args.title:
         for title_arg in args.title:
@@ -72,6 +70,7 @@ def axes_main_functions(args, attrs):
             teye_eval('%s.set_title(%s)'%(ax, title), attrs)
 
 
+    # x-axis setting
     if args.xaxis:
         for xaxis_arg in args.xaxis:
             ax, xaxis = _get_axis(xaxis_arg)
@@ -86,6 +85,7 @@ def axes_main_functions(args, attrs):
                     value = func_args.pop(funckey)
                     func(value, **func_args)
 
+    # y-axis setting
     if args.yaxis:
         for yaxis_arg in args.yaxis:
             ax, yaxis = _get_axis(yaxis_arg)
@@ -100,8 +100,20 @@ def axes_main_functions(args, attrs):
                     value = func_args.pop(funckey)
                     func(value, **func_args)
 
+    # z-axis setting
     if args.zaxis:
-        pass
+        for zaxis_arg in args.zaxis:
+            ax, zaxis = _get_axis(zaxis_arg)
+
+            set_zfuncs =  dict((z, getattr(attrs[ax], z)) for z in dir(attrs[ax]) if z.startswith('set_z'))
+            vargs, kwargs = parse_funcargs(zaxis, attrs)
+
+            for name, func in set_zfuncs.items():
+                funckey = name[5:]
+                if funckey in kwargs:
+                    func_args = dict(kwargs)
+                    value = func_args.pop(funckey)
+                    func(value, **func_args)
 
     # grid setting
     if args.g:
@@ -153,8 +165,8 @@ def teye_plot(args, attrs):
         attrs['page_num'] = idx
 
         # figure setting
-        if args.figure:
-            attrs['figure'] = teye_eval('pyplot.figure(%s)'%args.figure, attrs)
+        if args.f:
+            attrs['figure'] = teye_eval('pyplot.figure(%s)'%args.f, attrs)
         else:
             attrs['figure'] = attrs['pyplot'].figure()
 
@@ -164,7 +176,11 @@ def teye_plot(args, attrs):
             for ax_arg in args.ax:
                 axname, others = _get_axis(ax_arg, delimiter='=')
                 if axname:
-                    attrs[axname] = teye_eval('figure.add_subplot(%s)'%others, attrs)
+                    vargs, kwargs = parse_funcargs(others, attrs)
+                    if len(vargs) == 0 or not isinstance(vargs[0], int): 
+                        attrs[axname] = teye_eval('figure.add_subplot(111, %s)'%others, attrs)
+                    else:
+                        attrs[axname] = teye_eval('figure.add_subplot(%s)'%others, attrs)
                 else:
                     raise UsageError('Wrong axis option: %s'%ax_arg)
         else:
@@ -180,6 +196,15 @@ def teye_plot(args, attrs):
         else:
             attrs['page_name'] = 'page%d'%(attrs['page_num'] + 1)
 
+        # execute figure functions
+        if args.figure:
+            for fig_arg in args.figure:
+                name, others = _get_name(fig_arg)
+                if others:
+                    teye_eval('figure.%s(%s)'%(name, others), attrs)
+                else:
+                    teye_eval('figure.%s()'%name, attrs)
+
         # generate plots
         gen_plot(args, attrs)
 
@@ -190,28 +215,28 @@ def teye_plot(args, attrs):
         if args.axes:
             for axes_arg in args.axes:
                 ax, arg = _get_axis(axes_arg)
-                axes = arg.split(',', 1)
-                if len(axes) == 1:
-                    teye_eval('ax.%s()'%axes[0], attrs)
+                name, others = _get_name(arg)
+                if others:
+                    teye_eval('%s.%s(%s)'%(ax, name, others), attrs)
                 else:
-                    teye_eval('%s.%s(%s)'%(ax, axes[0], axes[1]), attrs)
+                    teye_eval('ax.%s()'%name, attrs)
         elif not attrs['plots']:
             if len(attrs['_data_objects']) > 0:
                 for data_obj in attrs['_data_objects']:
                     attrs['ax'].plot(data_obj.get_data('', '', attrs))
-            else:
+            elif not args.figure:
                 error_exit("There is no data to plot.")
 
         # saving an image file
         if args.save:
-            for saveargs in args.save:
-                arglist = saveargs.split(',', 1)
+            for save_arg in args.save:
+                name, others = _get_name(save_arg)
                 if '_pdf_merge' in attrs:
                     if '_pdf_pages' not in attrs:
-                        attrs['_pdf_pages'] =  teye_eval('_pdf_merge(%s)'%arglist[0], attrs)
+                        attrs['_pdf_pages'] =  teye_eval('_pdf_merge(%s)'%name, attrs)
                     teye_eval('_pdf_pages.savefig()', attrs)
                 else:
-                    teye_eval('figure.savefig(%s)'%saveargs, attrs)
+                    teye_eval('figure.savefig(%s)'%save_arg, attrs)
 
         # displyaing an image on screen
         if not args.noshow:

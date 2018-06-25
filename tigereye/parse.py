@@ -128,7 +128,6 @@ class ArgParse(object):
 
     def _parse_arguments(self, argv):
 
-        # TODO: add figure functions
         # TODO: add zaxis support
         # TODO: add page-calc support
         # TODO: add front-page and back-page support
@@ -140,10 +139,10 @@ class ArgParse(object):
 
         parser = argparse.ArgumentParser(description='A reusable data-manipulation and plotting tool')
         parser.add_argument('data_sources', metavar='data source', nargs='*', help='input raw data.')
+        parser.add_argument('-f', metavar='figure creation', help='define a figure for plotting.')
         parser.add_argument('-v', '--variable', metavar='varname:<formula>', action='append', help='define data.')
         parser.add_argument('-t', '--title', metavar='title', action='append', help='title  plotting.')
         parser.add_argument('-p', '--plot', metavar='plot type', action='append', help='plot type for plotting.')
-        parser.add_argument('-f', '--figure', metavar='figure', help='figure for plotting.')
         parser.add_argument('-s', '--save', metavar='save', action='append', help='file path to save png image.')
         parser.add_argument('-d', '--value', metavar='value', action='append', help='print data value on screen.')
         parser.add_argument('-x', '--xaxis', metavar='xaxis', action='append', help='axes function wrapper for x axis settings.')
@@ -156,6 +155,7 @@ class ArgParse(object):
         parser.add_argument('--legend', metavar='legend', action='append', help='plot legend')
         parser.add_argument('--grid', metavar='grid', action='append', help='grid for plotting.')
         parser.add_argument('--ax', metavar='ax', action='append', help='define plot axes.')
+        parser.add_argument('--figure', metavar='figure function', action='append', help='define Figure function.')
         parser.add_argument('--axes', metavar='axes', action='append', help='define Axes function.')
         parser.add_argument('--data-format', metavar='data format', action='append', help='define the format and load options of raw input data.')
         parser.add_argument('--calc', metavar='calc', action='append', help='python code for manipulating data.')

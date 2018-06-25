@@ -30,6 +30,7 @@ def _main(argv, tempdir):
         os.remove(outfile)
 
     argv.extend(["-s", "'%s'"%outfile, "--noshow"])
+    #argv.extend(["-s", "'%s'"%outfile])
     main(argv)
 
     assert os.path.isfile(outfile)
@@ -156,6 +157,28 @@ def test_template1(tempdir):
     argv = [
         "-i", "%s"%template_sampel1,
         "-t", "'My Plot'",
+    ]
+
+    _main(argv, tempdir)
+
+
+def test_figure_text(tempdir):
+    argv = [
+        "--figure", "text, 0.5, 0.5, 'Hello World!'",
+    ]
+
+    _main(argv, tempdir)
+
+def ttest_3D_line(tempdir):
+    argv = [
+        "--ax", "ax= projection='3d'",
+        "-v", "theta=numpy.linspace(-4 * numpy.pi, 4 * numpy.pi, 100)",
+        "-v", "z=numpy.linspace(-2, 2, 100)",
+        "-v", "r=z**2 + 1",
+        "-v", "x=r * numpy.sin(theta)",
+        "-v", "y=r * numpy.cos(theta)",
+        "-p", "ax: plot, x, y, z, label='parametric curve'",
+        "-l",
     ]
 
     _main(argv, tempdir)
