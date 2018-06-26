@@ -25,8 +25,12 @@ def main(argv):
         attrs = {}
 
         # import core libraries
+        import os
         import csv
         import numpy
+        import matplotlib
+        if os.environ.get('DISPLAY','') == '':
+            matplotlib.use('Agg')
         import matplotlib.pyplot as plt
         attrs['csv'] = csv
         attrs['numpy'] = numpy
