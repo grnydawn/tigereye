@@ -207,3 +207,14 @@ def test_import_data(tempdir):
 
     _main(argv, tempdir)
 
+
+def test_import_plot(tempdir):
+    outfile = '%s/test.pdf'%tempdir
+    argv = [
+        "-v", "x=numpy.linspace(0, 2*numpy.pi)",
+        "-v", "y=numpy.sin(x)",
+        "--import-plot", "axlocal:ax = 111, '%s', varx=x, vary=y"%template_sampel1
+    ]
+
+    _main(argv, tempdir)
+

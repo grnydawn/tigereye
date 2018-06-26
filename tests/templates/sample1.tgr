@@ -1,6 +1,7 @@
 -v "varx=numpy.linspace(0, 2*numpy.pi)"
 -v "vary=numpy.sin(varx)"
+--ax "ax= 111"
 -t "'Sample Plot', fontsize=16"
 -x "label='X', fontsize=12"
 -y "label='Y', fontsize=12"
--p "plot, varx, vary, label='line1'"
+-p "ax:plot, varx, vary, label='line1'"

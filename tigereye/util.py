@@ -113,6 +113,11 @@ def parse_funcargs(args_str, attrs):
     return teye_eval('_p(%s)'%args_str, attrs, _p=_parse)
 
 
+def args_pop(args, name, num_remove):
+    if name in args:
+        for idx in [args.index(name)]*(num_remove+1):
+            del args[idx]
+
 def _parse_item(text, recompile):
 
     match = recompile.match(text)

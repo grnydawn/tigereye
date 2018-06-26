@@ -30,19 +30,11 @@ def teye_import_data(args, attrs):
                         elif len(vpair) == 2:
                             attrs[vpair[0].strip()] = newattrs[vpair[1].strip()]
                         else:
-                            raise UsageError('The syntax of import variable is not correct'%importvars)
+                            raise UsageError('The syntax of import variable is not correct: %s'%importvars)
                 else:
-                    raise UsageError('There is no variable to import'%import_data_opt)
+                    raise UsageError('There is no variable to import: %s'%import_data_opt)
             else:
                 raise UsageError('There should be only one data template target: %s'%import_args)
-
-def teye_import_plot(args, attrs):
-
-    # add_subplot for the imported plot
-    # --import-plot "axlocal:axremote = 321, http://dfsd.sdfs.fsd.sf.df.sdf, local1=remote1,local2=remote2, ..."
-    # run teye_plot upto axis is defined
-    if args.import_plot:
-        import pdb; pdb.set_trace()
 
 def teye_import_frontpage(args, attrs):
     if args.front_page:

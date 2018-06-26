@@ -6,37 +6,23 @@ from __future__ import (absolute_import, division,
 
 import os
 import re
+import copy
 
 from .error import UsageError
 from .util import (error_exit, teye_eval, parse_funcargs, get_var,
-    get_axis, get_name)
-from .template import teye_import_plot
-#
-#_re_ax_colon = re.compile(r'(?P<ax>ax\d*)\s*:\s*(?P<others>.*)')
-#_re_ax_equal = re.compile(r'(?P<ax>ax\d*)\s*=\s*(?P<others>.*)')
-#_re_name = re.compile(r'(?P<name>\w+)\s*,?\s*(?P<others>.*)')
-#
-## TODO: use utility functiion for attrs set attrs[key] = value
-## TODO: the utility function should check security
-#
-#def _get_axis(arg, delimiter=':'):
-#    match = None
-#    if delimiter == ':':
-#        match = _re_ax_colon.match(arg)
-#    elif delimiter == '=':
-#        match = _re_ax_equal.match(arg)
-#    if match:
-#        return match.group('ax'), match.group('others')
-#    else:
-#        return 'ax', arg
-#
-#def _get_name(arg):
-#
-#    match = _re_name.match(arg)
-#    if match:
-#        return match.group('name'), match.group('others')
-#    else:
-#        return arg, ''
+    get_axis, get_name, read_template, args_pop)
+from .parse import teye_parse
+
+# TODO: use utility functiion for attrs set attrs[key] = value
+# TODO: the utility function should check security
+
+def import_frontpage(args, attrs):
+    if args.front_page:
+        import pdb; pdb.set_trace()
+
+def import_backpage(args, attrs):
+    if args.back_page:
+        import pdb; pdb.set_trace()
 
 def gen_plot(args, attrs):
 
@@ -64,7 +50,10 @@ def gen_plot(args, attrs):
                 if pname == 'pie':
                     attrs[ax].axis('equal')
 
-    attrs['plots'] = plots
+    if 'plots' in attrs:
+        attrs['plots'].extend(plots)
+    else:
+        attrs['plots'] = plots
 
 def axes_main_functions(args, attrs):
 
@@ -144,7 +133,24 @@ def axes_main_functions(args, attrs):
                 ax, legend = get_axis(legend_arg)
                 teye_eval('%s.legend(%s)'%(ax, legend), attrs)
 
+
 def teye_plot(args, attrs):
+
+    # multipage
+    if args.book:
+        vargs, kwargs = parse_funcargs(args.book, attrs)
+        if vargs:
+            bookfmt = kwargs.pop('format', 'pdf').lower()
+            attrs['_page_save'] = kwargs.pop('page_save', False)
+            kwargs = ', '.join(['%s=%s'%(k,v) for k,v in kwargs.items()])
+            if kwargs:
+                kwargs = ', %s'%kwargs
+            for target in vargs:
+                if bookfmt == 'pdf':
+                    from matplotlib.backends.backend_pdf import PdfPages
+                    attrs['_pdf_pages'] =  teye_eval('_p("%s"%s)'%(target, kwargs), attrs, _p=PdfPages)
+                else:
+                    raise UsageError('Book format, "%s", is not supported.'%bookfmt)
 
     # pages setting
     if args.pages:
@@ -171,7 +177,9 @@ def teye_plot(args, attrs):
 
 
         # figure setting
-        if args.f:
+        if 'figure' in attrs and attrs['figure']:
+            pass
+        elif args.f:
             attrs['figure'] = teye_eval('pyplot.figure(%s)'%args.f, attrs)
         else:
             attrs['figure'] = attrs['pyplot'].figure()
@@ -179,7 +187,34 @@ def teye_plot(args, attrs):
 
         # import plot
         if args.import_plot:
-            teye_import_plot(args, attrs)
+            for import_plot_opt in args.import_plot:
+                importplots, import_args = [i.strip() for i in import_plot_opt.split('=', 1)]
+                newattrs = copy.copy(attrs)
+                templates, kwargs = parse_funcargs(import_args, newattrs)
+                if len(templates) == 2:
+                    opts = read_template(templates[1])
+                    if args.noshow:
+                        opts.append("--noshow")
+                    args_pop(opts, '--book', 1)
+                    newargs = teye_parse(opts, newattrs)
+                    newattrs.update(kwargs)
+                    teye_plot(newargs, newattrs)
+                    if importplots:
+                        for ppair in importplots.split(','):
+                            ppair = ppair.split(':')
+                            if len(ppair) == 1:
+                                attrs[ppair[0].strip()] = newattrs[ppair[0].strip()]
+                            elif len(ppair) == 2:
+                                attrs[ppair[0].strip()] = newattrs[ppair[1].strip()]
+                            else:
+                                raise UsageError('The syntax of importing plot is not correct: %s'%importplots)
+                        if 'plots' in newattrs:
+                            if 'plots' in attrs:
+                                attrs['plots'].extend(newattrs['plots'])
+                            else:
+                                attrs['plots'] = newattrs['plots']
+                else:
+                    raise UsageError('The syntax of import plot is not correct: %s'%import_args)
 
         # plot axis
         if args.ax:
@@ -196,7 +231,7 @@ def teye_plot(args, attrs):
                         attrs[axname] = teye_eval('figure.add_subplot(%s)'%others, attrs)
                 else:
                     raise UsageError('Wrong axis option: %s'%ax_arg)
-        else:
+        elif not args.import_plot:
             attrs['ax'] = attrs['figure'].add_subplot(111)
 
         # page names
@@ -252,7 +287,7 @@ def teye_plot(args, attrs):
                 if '_pdf_pages' in attrs:
                     if attrs['_page_save']:
                         teye_eval('figure.savefig(%s%s)'%(name, others), attrs)
-                    teye_eval('_pdf_pages.savefig()', attrs)
+                    teye_eval('_pdf_pages.savefig(figure=figure)', attrs)
                 else:
                     teye_eval('figure.savefig(%s%s)'%(name, others), attrs)
 
@@ -261,4 +296,8 @@ def teye_plot(args, attrs):
             attrs['pyplot'].show()
 
         teye_eval('pyplot.close(figure)', attrs)
+
+    # multi-page closing
+    if '_pdf_pages' in attrs:
+        attrs['_pdf_pages'].close()
 
