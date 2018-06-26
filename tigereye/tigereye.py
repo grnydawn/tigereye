@@ -28,10 +28,11 @@ def main(argv):
         import os
         import csv
         import numpy
-        import matplotlib
-        if os.environ.get('DISPLAY','') == '':
-            matplotlib.use('Agg')
+        #import matplotlib
         import matplotlib.pyplot as plt
+        if os.environ.get('DISPLAY','') == '':
+            #matplotlib.use('Agg')
+            plt.ioff()
         attrs['csv'] = csv
         attrs['numpy'] = numpy
         attrs['pyplot'] = plt
