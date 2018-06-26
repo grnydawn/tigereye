@@ -6,11 +6,11 @@ tigereye
 .. image:: https://img.shields.io/pypi/v/tigereye.svg
         :target: https://pypi.python.org/pypi/tigereye
 
-.. image:: https://travis-ci.org/grnydawn/tigereye.svg?branch=master
+.. image:: https://img.shields.io/travis/grnydawn/tigereye.svg
     :target: https://travis-ci.org/grnydawn/tigereye
 
 .. image:: https://readthedocs.org/projects/tigereye/badge/?version=latest
-        :target:https://grnydawn.github.io/tigereyedocs
+        :target: https://tigereye.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
 
