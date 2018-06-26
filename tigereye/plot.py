@@ -175,6 +175,12 @@ def teye_plot(args, attrs):
             attrs['figure'] = attrs['pyplot'].figure()
 
 
+        # import plot
+        if args.import_plot:
+            # add_subplot for the imported plot
+            # --import-plot "axlocal: 321, http://dfsd.sdfs.fsd.sf.df.sdf, axremote, local1=remote1,local2=remote2, ..."
+            import pdb; pdb.set_trace()
+
         # plot axis
         if args.ax:
             for ax_arg in args.ax:

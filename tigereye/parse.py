@@ -138,10 +138,8 @@ class ArgParse(object):
 
         # TODO: add front-page and back-page support
         #       - provides kwargs for data inputs
-        #       - data definitions in front-age are overwritten
         #       - tigereye provides input analysis report
         # TODO: add tigereye command-line analysis report
-        # TODO: add import-data support
 
         parser = argparse.ArgumentParser(description='A reusable data-manipulation and plotting tool')
         parser.add_argument('data_sources', metavar='data source', nargs='*', help='input raw data.')

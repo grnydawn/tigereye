@@ -40,6 +40,9 @@ def main(argv):
         # argument and template processing
         args = teye_parse(argv, attrs)
 
+        # import data
+        teye_import_data(args, attrs)
+
         # data collection
         teye_load(args, attrs)
 
@@ -50,8 +53,14 @@ def main(argv):
         if 'return' in attrs:
             return attrs['return']
 
+        # import frontpage
+        teye_import_frontpage(args, attrs)
+
         # plot generation
         teye_plot(args, attrs)
+
+        # import backpage
+        teye_import_backpage(args, attrs)
 
     except InternalError as err:
 
