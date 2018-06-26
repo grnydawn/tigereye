@@ -169,7 +169,7 @@ def test_figure_text(tempdir):
 
     _main(argv, tempdir)
 
-def ttest_3D_line(tempdir):
+def test_3D_line(tempdir):
     argv = [
         "--ax", "ax= projection='3d'",
         "-v", "theta=numpy.linspace(-4 * numpy.pi, 4 * numpy.pi, 100)",
@@ -179,6 +179,17 @@ def ttest_3D_line(tempdir):
         "-v", "y=r * numpy.cos(theta)",
         "-p", "ax: plot, x, y, z, label='parametric curve'",
         "-l",
+    ]
+
+    _main(argv, tempdir)
+
+def test_page_calc(tempdir):
+    argv = [
+        "-v", "i=numpy.linspace(0, 1)",
+        "-p", "plot, i, j",
+        "--page-calc", "j=i*10+page_num",
+        "-t", "'Page-%d'%page_num",
+        "--pages", "2",
     ]
 
     _main(argv, tempdir)

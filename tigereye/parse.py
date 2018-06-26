@@ -128,8 +128,6 @@ class ArgParse(object):
 
     def _parse_arguments(self, argv):
 
-        # TODO: add zaxis support
-        # TODO: add page-calc support
         # TODO: add front-page and back-page support
         #       - provides kwargs for data inputs
         #       - data definitions in front-age are overwritten

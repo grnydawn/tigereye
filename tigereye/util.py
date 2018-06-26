@@ -4,10 +4,14 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 
 import sys
+import re
 
 from .error import UsageError
 
 _DEBUG = True
+
+_re_var = re.compile(r'(?P<name>\w+)\s*=\s*(?P<others>.*)')
+_re_did = re.compile(r'(?P<name>d\d+)(?P<others>.*)')
 
 builtins = {
 #    'abs': abs,
@@ -90,3 +94,21 @@ def parse_funcargs(args_str, attrs):
         return args, kw_str
 
     return teye_eval('_p(%s)'%args_str, attrs, _p=_parse)
+
+
+def _parse_name(text, recompile):
+
+    for arg in text:
+        match = recompile.match(arg)
+        if match:
+            yield match.group('name'), match.group('others')
+        else:
+            raise UsageError('The syntax of data definition is not correct: %s'%arg)
+
+def get_var(var):
+
+    return _parse_name(var, _re_var)
+
+def get_did(did):
+
+    return _parse_name(var, _re_did)

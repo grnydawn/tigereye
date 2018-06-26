@@ -7,8 +7,7 @@ from __future__ import (absolute_import, division,
 import re
 
 from .error import UsageError
-from .util import (error_exit, teye_eval,
-    parse_funcargs)
+from .util import (error_exit, teye_eval, parse_funcargs, get_var)
 
 _re_ax_colon = re.compile(r'(?P<ax>ax\d*)\s*:\s*(?P<others>.*)')
 _re_ax_equal = re.compile(r'(?P<ax>ax\d*)\s*=\s*(?P<others>.*)')
@@ -164,6 +163,11 @@ def teye_plot(args, attrs):
 
         attrs['page_num'] = idx
 
+        if args.page_calc:
+            for vname, formula in get_var(args.page_calc):
+                attrs[vname] = teye_eval(formula, attrs)
+
+
         # figure setting
         if args.f:
             attrs['figure'] = teye_eval('pyplot.figure(%s)'%args.f, attrs)
@@ -177,7 +181,10 @@ def teye_plot(args, attrs):
                 axname, others = _get_axis(ax_arg, delimiter='=')
                 if axname:
                     vargs, kwargs = parse_funcargs(others, attrs)
-                    if len(vargs) == 0 or not isinstance(vargs[0], int): 
+                    if 'projection' in kwargs and kwargs['projection'] == '3d':
+                         from mpl_toolkits.mplot3d import Axes3D
+                         attrs['Axes3D'] = Axes3D
+                    if len(vargs) == 0 or not isinstance(vargs[0], int):
                         attrs[axname] = teye_eval('figure.add_subplot(111, %s)'%others, attrs)
                     else:
                         attrs[axname] = teye_eval('figure.add_subplot(%s)'%others, attrs)
