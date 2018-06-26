@@ -29,22 +29,25 @@ Installation
 Dependencies
 ============
 
-Tigereye extensively uses matplotlib_ and numpy_. Before using tigereye, the two Python package needs to be installed. You can check if the packages are available locally on your computer by running following commands. You should see three numbers similar to "2.2.2". If not, please visit corresponding package sites to know how to install the packages.
+Tigereye extensively uses matplotlib_ and numpy_ Python packages. Before using tigereye, the two Python packages need to be installed. In many cases, the packages may be already available for you. You can check if the packages are available locally on your computer by running following commands. You should see three numbers similar to "2.2.2" per each commands below. If not, please visit corresponding package site and follow installation direction to install.
 
 .. code-block:: text
 
     $ python -c "import numpy; print(numpy.__version__)"
     $ python -c "import matplotlib; print(matplotlib.__version__)"
 
-Installing using pip
-====================
+You can install tigereye either using pip Python package manager or using source code from github repositiory. You may get a stable version from using pip and a latest version from using source code.
+
+Installing tigereye using pip
+=============================
 
 .. code-block:: text
 
     $ pip install tigereye
+    $ tigereye --version
 
-Installing from github repository
-=================================
+Installing tigereye from github repository
+==========================================
 
 .. code-block:: text
 
