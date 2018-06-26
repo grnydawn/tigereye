@@ -70,6 +70,11 @@ The simplest tigereye plot
 
     $ tigereye "[1,2,4]"
 
+tigereye "[<inputs>]"
+
+command tigereye allows user to use the program tigereye.
+numbers inside the bracket represents each data points which are seperate with commas.
+
 A title is added.
 =================
 
@@ -77,6 +82,10 @@ A title is added.
 
     $ tigereye "[1,2,4]" \
         -t "'Sample Plot', fontsize=16"
+
+-t "'<title>"', fontsize=<number>"
+
+-t represents title. Allows user to add title and adjust font size.
 
 Labels are added into x and y axes.
 ===================================
@@ -87,6 +96,11 @@ Labels are added into x and y axes.
         -t "'Sample Plot', fontsize=16" \
         -x "label='X', fontsize=12" \
         -y "label='Y', fontsize=12"
+
+-x "label='<name of x-axis>', fontsize=<number>"
+-y "label='<name of y-axis>', fontsize=<number>"
+
+-x and -y each represents x and y-axis. Allows user to add the name of x and y-axis.
 
 Data is generated using numpy.
 ==============================
@@ -101,6 +115,14 @@ Data is generated using numpy.
         -y "label='Y', fontsize=12" \
         -p "plot, varx, vary, label='line1'"
 
+-v "varx=numpy.linspace(0, 2*numpy.pi)"
+-v "vary=numpy.sin(varx)"
+-p "plot, varx, vary, label='<line name>'"
+
+-v represents variable. Tigereye uses stored functions of numpy such as linspace. 
+vary can be represented as a function of varx.
+-p represents plot. Allows user to plot varx, vary, and the name of the line.
+
 Plot is generated using a template .
 ====================================
 
@@ -109,6 +131,11 @@ Plot is generated using a template .
     $ tigereye \
         -i https://raw.githubusercontent.com/grnydawn/tigereye/master/template/basic/sample1.tgr \
         -t "'My Plot'"
+
+-i <url>
+
+Allows user to import data set from the following url.
+
 
 Data is read from a local file.
 ===============================
