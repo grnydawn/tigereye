@@ -136,9 +136,6 @@ class ArgParse(object):
 
     def _parse_arguments(self, argv):
 
-        # TODO: add front-page and back-page support
-        #       - provides kwargs for data inputs
-        #       - tigereye provides input analysis report
         # TODO: add tigereye command-line analysis report
 
         parser = argparse.ArgumentParser(description='A reusable data-manipulation and plotting tool')
@@ -163,6 +160,7 @@ class ArgParse(object):
         parser.add_argument('--axes', metavar='axes', action='append', help='define Axes function.')
         parser.add_argument('--data-format', metavar='data format', action='append', help='define the format and load options of raw input data.')
         parser.add_argument('--calc', metavar='calc', action='append', help='python code for manipulating data.')
+        parser.add_argument('--book', metavar='book', help='book settings.')
         parser.add_argument('--pages', metavar='pages', help='page settings.')
         parser.add_argument('--page-calc', metavar='page_calc', action='append', help='python code for manipulating data within page generation.')
         parser.add_argument('--front-page', metavar='front_page', action='append', help='importing front page')

@@ -8,10 +8,14 @@ import re
 
 from .error import UsageError
 from .util import (error_exit, teye_eval, parse_funcargs, get_var)
+from .template import teye_import_plot
 
 _re_ax_colon = re.compile(r'(?P<ax>ax\d*)\s*:\s*(?P<others>.*)')
 _re_ax_equal = re.compile(r'(?P<ax>ax\d*)\s*=\s*(?P<others>.*)')
 _re_name = re.compile(r'(?P<name>\w+)\s*,?\s*(?P<others>.*)')
+
+# TODO: use utility functiion for attrs set attrs[key] = value
+# TODO: the utility function should check security
 
 def _get_axis(arg, delimiter=':'):
     match = None
@@ -140,7 +144,6 @@ def axes_main_functions(args, attrs):
 
 def teye_plot(args, attrs):
 
-    # matplotlib settings
     # pages setting
     if args.pages:
         vargs, kwargs = parse_funcargs(args.pages, attrs)
@@ -151,11 +154,7 @@ def teye_plot(args, attrs):
             attrs['num_pages'] = 1
 
         for key, value in kwargs.items():
-            if key == 'pdf_merge' and value:
-                from matplotlib.backends.backend_pdf import PdfPages
-                attrs['_pdf_merge'] = PdfPages
-            else:
-                attrs[key] = value
+            attrs[key] = value
     else:
         attrs['num_pages'] = 1
 
@@ -177,9 +176,7 @@ def teye_plot(args, attrs):
 
         # import plot
         if args.import_plot:
-            # add_subplot for the imported plot
-            # --import-plot "axlocal: 321, http://dfsd.sdfs.fsd.sf.df.sdf, axremote, local1=remote1,local2=remote2, ..."
-            import pdb; pdb.set_trace()
+            teye_import_plot(args, attrs)
 
         # plot axis
         if args.ax:
@@ -244,9 +241,9 @@ def teye_plot(args, attrs):
         if args.save:
             for save_arg in args.save:
                 name, others = _get_name(save_arg)
-                if '_pdf_merge' in attrs:
-                    if '_pdf_pages' not in attrs:
-                        attrs['_pdf_pages'] =  teye_eval('_pdf_merge(%s)'%name, attrs)
+                if '_pdf_pages' in attrs:
+                    if attrs['_page_save'] == 'yes':
+                        teye_eval('figure.savefig(%s)'%save_arg, attrs)
                     teye_eval('_pdf_pages.savefig()', attrs)
                 else:
                     teye_eval('figure.savefig(%s)'%save_arg, attrs)
@@ -257,6 +254,3 @@ def teye_plot(args, attrs):
 
         teye_eval('pyplot.close(figure)', attrs)
 
-    # multi-page closing
-    if '_pdf_pages' in attrs:
-        attrs['_pdf_pages'].close()

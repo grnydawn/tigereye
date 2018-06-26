@@ -2,9 +2,6 @@
 """tigereye main module."""
 from __future__ import absolute_import
 
-# TODO: --page-template, like function
-# TODO: --data-template, line function
-
 # import tigereye features
 from .util import support_message, error_exit
 from .error import InternalError, UsageError
@@ -12,6 +9,8 @@ from .parse import teye_parse
 from .load import teye_load
 from .var import teye_var
 from .plot import teye_plot
+from .template import (teye_import_data, teye_import_frontpage,
+    teye_import_backpage)
 
 def entry():
     import sys
@@ -53,6 +52,20 @@ def main(argv):
         if 'return' in attrs:
             return attrs['return']
 
+        # multipage
+        if args.book:
+            vargs, kwargs = parse_funcargs(args.book, attrs)
+            if vargs:
+                bookfmt = kwargs.pop('format', 'pdf').lower()
+                attrs['_save_page'] = kwargs.pop('format', 'no').lower()
+                kwargs = ', '.join(['%s=%s'%(k,v) for k,v in kwargs.items()])
+                for target in vargs:
+                    if bookformat == 'pdf':
+                        from matplotlib.backends.backend_pdf import PdfPages
+                        attrs['_pdf_pages'] =  teye_eval('_p(%s, %s)'%(target, kwargs), attrs, _p=PdfPages)
+                    else:
+                        raise UsageError('Book format, "%s", is not supported.'%bookfmt)
+
         # import frontpage
         teye_import_frontpage(args, attrs)
 
@@ -61,6 +74,10 @@ def main(argv):
 
         # import backpage
         teye_import_backpage(args, attrs)
+
+        # multi-page closing
+        if '_pdf_pages' in attrs:
+            attrs['_pdf_pages'].close()
 
     except InternalError as err:
 
