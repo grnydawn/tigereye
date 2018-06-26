@@ -14,6 +14,9 @@ _DEBUG = True
 
 _re_var = re.compile(r'(?P<name>\w+)\s*=\s*(?P<others>.*)')
 _re_did = re.compile(r'(?P<name>d\d+)(?P<others>.*)')
+_re_ax_colon = re.compile(r'(?P<name>ax\d*)\s*:\s*(?P<others>.*)')
+_re_ax_equal = re.compile(r'(?P<name>ax\d*)\s*=\s*(?P<others>.*)')
+_re_name = re.compile(r'(?P<name>\w+)\s*,?\s*(?P<others>.*)')
 
 builtins = {
 #    'abs': abs,
@@ -107,25 +110,45 @@ def parse_funcargs(args_str, attrs):
     def _parse(*args, **kw_str):
         return args, kw_str
 
-    return teye_eval(b'_p(%s)'%args_str, attrs, _p=_parse)
+    return teye_eval('_p(%s)'%args_str, attrs, _p=_parse)
 
 
-def _parse_name(text, recompile):
+def _parse_item(text, recompile):
 
-    for arg in text:
-        match = recompile.match(arg)
-        if match:
-            yield match.group('name'), match.group('others')
-        else:
-            raise UsageError('The syntax of data definition is not correct: %s'%arg)
+    match = recompile.match(text)
+    if match:
+        return match.group('name'), match.group('others')
+    else:
+        raise UsageError('The syntax of data definition is not correct: %s'%text)
 
 def get_var(var):
 
-    return _parse_name(var, _re_var)
+    return _parse_item(var, _re_var)
 
 def get_did(did):
 
-    return _parse_name(var, _re_did)
+    return _parse_item(var, _re_did)
+
+def get_axis(arg, delimiter=':'):
+
+    if delimiter == ':':
+        pattern = _re_ax_colon
+    elif delimiter == '=':
+        pattern = _re_ax_equal
+    else:
+        raise UsageError('Unknown delimiter during axis parsing:: %s, %s'%(args, delimiter))
+
+    try:
+        return _parse_item(arg, pattern)
+    except UsageError as err:
+        return 'ax', arg
+
+def get_name(arg):
+
+    try:
+        return _parse_item(arg, _re_name)
+    except UsageError as err:
+        return arg, ''
 
 def read_template(template):
 

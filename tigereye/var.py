@@ -14,7 +14,9 @@ _re_did = re.compile(r'(?P<did>d\d+)(?P<others>.*)')
 def teye_var(args, attrs):
 
     if args.variable:
-        for vname, formula in get_var(args.variable):
+        for var in args.variable:
+            vname, formula = get_var(var)
+        #for vname, formula in get_var(args.variable):
             if formula[0]=='d':
                 match = _re_did.match(formula)
                 if match:
@@ -34,7 +36,9 @@ def teye_var(args, attrs):
                         vname, formula))
 
     if args.calc:
-        for vname, formula in get_var(args.calc):
+        for calc in args.calc:
+        #for vname, formula in get_var(args.calc):
+            vname, formula = get_var(calc)
             attrs[vname] = teye_eval(formula, attrs)
 
     if args.value:

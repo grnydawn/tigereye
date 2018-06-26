@@ -39,7 +39,8 @@ def teye_import_data(args, attrs):
 def teye_import_plot(args, attrs):
 
     # add_subplot for the imported plot
-    # --import-plot "axlocal: 321, http://dfsd.sdfs.fsd.sf.df.sdf, axremote, local1=remote1,local2=remote2, ..."
+    # --import-plot "axlocal:axremote = 321, http://dfsd.sdfs.fsd.sf.df.sdf, local1=remote1,local2=remote2, ..."
+    # run teye_plot upto axis is defined
     if args.import_plot:
         import pdb; pdb.set_trace()
 

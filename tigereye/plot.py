@@ -8,34 +8,35 @@ import os
 import re
 
 from .error import UsageError
-from .util import (error_exit, teye_eval, parse_funcargs, get_var)
+from .util import (error_exit, teye_eval, parse_funcargs, get_var,
+    get_axis, get_name)
 from .template import teye_import_plot
-
-_re_ax_colon = re.compile(r'(?P<ax>ax\d*)\s*:\s*(?P<others>.*)')
-_re_ax_equal = re.compile(r'(?P<ax>ax\d*)\s*=\s*(?P<others>.*)')
-_re_name = re.compile(r'(?P<name>\w+)\s*,?\s*(?P<others>.*)')
-
-# TODO: use utility functiion for attrs set attrs[key] = value
-# TODO: the utility function should check security
-
-def _get_axis(arg, delimiter=':'):
-    match = None
-    if delimiter == ':':
-        match = _re_ax_colon.match(arg)
-    elif delimiter == '=':
-        match = _re_ax_equal.match(arg)
-    if match:
-        return match.group('ax'), match.group('others')
-    else:
-        return 'ax', arg
-
-def _get_name(arg):
-
-    match = _re_name.match(arg)
-    if match:
-        return match.group('name'), match.group('others')
-    else:
-        return arg, ''
+#
+#_re_ax_colon = re.compile(r'(?P<ax>ax\d*)\s*:\s*(?P<others>.*)')
+#_re_ax_equal = re.compile(r'(?P<ax>ax\d*)\s*=\s*(?P<others>.*)')
+#_re_name = re.compile(r'(?P<name>\w+)\s*,?\s*(?P<others>.*)')
+#
+## TODO: use utility functiion for attrs set attrs[key] = value
+## TODO: the utility function should check security
+#
+#def _get_axis(arg, delimiter=':'):
+#    match = None
+#    if delimiter == ':':
+#        match = _re_ax_colon.match(arg)
+#    elif delimiter == '=':
+#        match = _re_ax_equal.match(arg)
+#    if match:
+#        return match.group('ax'), match.group('others')
+#    else:
+#        return 'ax', arg
+#
+#def _get_name(arg):
+#
+#    match = _re_name.match(arg)
+#    if match:
+#        return match.group('name'), match.group('others')
+#    else:
+#        return arg, ''
 
 def gen_plot(args, attrs):
 
@@ -44,7 +45,7 @@ def gen_plot(args, attrs):
     if args.plot:
         for plot in args.plot:
 
-            ax, plotarg = _get_axis(plot)
+            ax, plotarg = get_axis(plot)
 
             poscomma = plotarg.find(',')
             if poscomma<0:
@@ -70,14 +71,14 @@ def axes_main_functions(args, attrs):
     # title setting
     if args.title:
         for title_arg in args.title:
-            ax, title = _get_axis(title_arg)
+            ax, title = get_axis(title_arg)
             teye_eval('%s.set_title(%s)'%(ax, title), attrs)
 
 
     # x-axis setting
     if args.xaxis:
         for xaxis_arg in args.xaxis:
-            ax, xaxis = _get_axis(xaxis_arg)
+            ax, xaxis = get_axis(xaxis_arg)
 
             set_xfuncs =  dict((x, getattr(attrs[ax], x)) for x in dir(attrs[ax]) if x.startswith('set_x'))
             vargs, kwargs = parse_funcargs(xaxis, attrs)
@@ -92,7 +93,7 @@ def axes_main_functions(args, attrs):
     # y-axis setting
     if args.yaxis:
         for yaxis_arg in args.yaxis:
-            ax, yaxis = _get_axis(yaxis_arg)
+            ax, yaxis = get_axis(yaxis_arg)
 
             set_yfuncs =  dict((y, getattr(attrs[ax], y)) for y in dir(attrs[ax]) if y.startswith('set_y'))
             vargs, kwargs = parse_funcargs(yaxis, attrs)
@@ -107,7 +108,7 @@ def axes_main_functions(args, attrs):
     # z-axis setting
     if args.zaxis:
         for zaxis_arg in args.zaxis:
-            ax, zaxis = _get_axis(zaxis_arg)
+            ax, zaxis = get_axis(zaxis_arg)
 
             set_zfuncs =  dict((z, getattr(attrs[ax], z)) for z in dir(attrs[ax]) if z.startswith('set_z'))
             vargs, kwargs = parse_funcargs(zaxis, attrs)
@@ -128,7 +129,7 @@ def axes_main_functions(args, attrs):
     if args.grid:
         for grid_arg in args.grid:
             if grid_arg:
-                ax, grid = _get_axis(grid_arg)
+                ax, grid = get_axis(grid_arg)
                 teye_eval('%s.grid(%s)'%(ax, grid), attrs)
 
     # legend setting 
@@ -140,7 +141,7 @@ def axes_main_functions(args, attrs):
     if args.legend:
         for legend_arg in args.legend:
             if legend_arg:
-                ax, legend = _get_axis(legend_arg)
+                ax, legend = get_axis(legend_arg)
                 teye_eval('%s.legend(%s)'%(ax, legend), attrs)
 
 def teye_plot(args, attrs):
@@ -164,7 +165,8 @@ def teye_plot(args, attrs):
         attrs['page_num'] = idx
 
         if args.page_calc:
-            for vname, formula in get_var(args.page_calc):
+            for page_calc in args.page_calc:
+                vname, formula = get_var(page_calc)
                 attrs[vname] = teye_eval(formula, attrs)
 
 
@@ -182,7 +184,7 @@ def teye_plot(args, attrs):
         # plot axis
         if args.ax:
             for ax_arg in args.ax:
-                axname, others = _get_axis(ax_arg, delimiter='=')
+                axname, others = get_axis(ax_arg, delimiter='=')
                 if axname:
                     vargs, kwargs = parse_funcargs(others, attrs)
                     if 'projection' in kwargs and kwargs['projection'] == '3d':
@@ -210,7 +212,7 @@ def teye_plot(args, attrs):
         # execute figure functions
         if args.figure:
             for fig_arg in args.figure:
-                name, others = _get_name(fig_arg)
+                name, others = get_name(fig_arg)
                 if others:
                     teye_eval('figure.%s(%s)'%(name, others), attrs)
                 else:
@@ -225,8 +227,8 @@ def teye_plot(args, attrs):
         # execute axes functions
         if args.axes:
             for axes_arg in args.axes:
-                ax, arg = _get_axis(axes_arg)
-                name, others = _get_name(arg)
+                ax, arg = get_axis(axes_arg)
+                name, others = get_name(arg)
                 if others:
                     teye_eval('%s.%s(%s)'%(ax, name, others), attrs)
                 else:
@@ -241,7 +243,7 @@ def teye_plot(args, attrs):
         # saving an image file
         if args.save:
             for save_arg in args.save:
-                name, others = _get_name(save_arg)
+                name, others = get_name(save_arg)
                 if attrs['num_pages'] > 1:
                     root, ext = os.path.splitext(name)
                     name = '%s-%d%s'%(root, attrs['page_num'], ext)
