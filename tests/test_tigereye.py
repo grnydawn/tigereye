@@ -78,6 +78,7 @@ def test_numpy_text(tempdir):
     _main(argv, tempdir)
 
 def test_csv_file(tempdir):
+    outfile = '%s/test.pdf'%tempdir
     argv = [
         "%s"%csv_text_data1,
         "-v", "l1=d0[1,:]",
@@ -88,7 +89,7 @@ def test_csv_file(tempdir):
         "--calc", "l2 = l2**2",
         "--value", "l2",
         "--pages", "2",
-        #"--pages", "2, pdf_merge=True",
+        "--book", "'%s', page_save=False"%outfile,
         #"--noplot",
 
     ]
@@ -138,6 +139,7 @@ def test_axis_opt(tempdir):
     _main(argv, tempdir)
 
 def test_remote_csv(tempdir):
+    outfile = '%s/test.pdf'%tempdir
     argv = [
         "%s"%remote_csv_data1, "['Page1', 'Page2']",
         "-v", "l=d0",
@@ -146,8 +148,8 @@ def test_remote_csv(tempdir):
         "-p", "plot, l[page_num, :]**2",
         "-t", "l4[page_num]",
         "--data-format", "d0:numpytext, delimiter=','",
-        #"--pages", "2",
-        "--pages", "2, pdf_merge=True",
+        "--pages", "2",
+        "--book", "'%s'"%outfile,
         #"--noplot",
     ]
 
@@ -184,12 +186,14 @@ def test_3D_line(tempdir):
     _main(argv, tempdir)
 
 def test_page_calc(tempdir):
+    outfile = '%s/test.pdf'%tempdir
     argv = [
         "-v", "i=numpy.linspace(0, 1)",
         "-p", "plot, i, j",
         "--page-calc", "j=i*10+page_num",
         "-t", "'Page-%d'%page_num",
         "--pages", "2",
+        "--book", "'%s', page_save=True"%outfile,
     ]
 
     _main(argv, tempdir)

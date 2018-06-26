@@ -4,6 +4,7 @@
 from __future__ import (absolute_import, division,
     print_function, unicode_literals)
 
+import os
 import re
 
 from .error import UsageError
@@ -241,12 +242,17 @@ def teye_plot(args, attrs):
         if args.save:
             for save_arg in args.save:
                 name, others = _get_name(save_arg)
+                if attrs['num_pages'] > 1:
+                    root, ext = os.path.splitext(name)
+                    name = '%s-%d%s'%(root, attrs['page_num'], ext)
+                if others:
+                    others = ', %s'%others
                 if '_pdf_pages' in attrs:
-                    if attrs['_page_save'] == 'yes':
-                        teye_eval('figure.savefig(%s)'%save_arg, attrs)
+                    if attrs['_page_save']:
+                        teye_eval('figure.savefig(%s%s)'%(name, others), attrs)
                     teye_eval('_pdf_pages.savefig()', attrs)
                 else:
-                    teye_eval('figure.savefig(%s)'%save_arg, attrs)
+                    teye_eval('figure.savefig(%s%s)'%(name, others), attrs)
 
         # displyaing an image on screen
         if not args.noshow:

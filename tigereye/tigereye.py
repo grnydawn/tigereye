@@ -3,7 +3,7 @@
 from __future__ import absolute_import
 
 # import tigereye features
-from .util import support_message, error_exit
+from .util import support_message, error_exit, parse_funcargs, teye_eval
 from .error import InternalError, UsageError
 from .parse import teye_parse
 from .load import teye_load
@@ -57,12 +57,12 @@ def main(argv):
             vargs, kwargs = parse_funcargs(args.book, attrs)
             if vargs:
                 bookfmt = kwargs.pop('format', 'pdf').lower()
-                attrs['_save_page'] = kwargs.pop('format', 'no').lower()
+                attrs['_page_save'] = kwargs.pop('page_save', False)
                 kwargs = ', '.join(['%s=%s'%(k,v) for k,v in kwargs.items()])
                 for target in vargs:
-                    if bookformat == 'pdf':
+                    if bookfmt == 'pdf':
                         from matplotlib.backends.backend_pdf import PdfPages
-                        attrs['_pdf_pages'] =  teye_eval('_p(%s, %s)'%(target, kwargs), attrs, _p=PdfPages)
+                        attrs['_pdf_pages'] =  teye_eval('_p("%s", %s)'%(target, kwargs), attrs, _p=PdfPages)
                     else:
                         raise UsageError('Book format, "%s", is not supported.'%bookfmt)
 
