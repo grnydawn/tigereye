@@ -177,9 +177,9 @@ class RemoteDataMixin(object):
                 f = urlopen(datasrc)
                 data = f.read()
                 f.close()
-        except HTTPError, e:
+        except HTTPError as e:
             error_exit("HTTP Error: %s %s"%(str(e.code), datasrc))
-        except URLError, e:
+        except URLError as e:
             error_exit("URL Error: %s %s"%(str(e.reason), datasrc))
 
         f = tempfile.NamedTemporaryFile(delete=False)

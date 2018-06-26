@@ -89,7 +89,7 @@ class ArgParse(object):
         data = None
 
         if os.path.isfile(template):
-            with open(template, 'rb') as f:
+            with open(template, 'r') as f:
                 data = f.readlines()
         elif urllib_imported:
             try:
@@ -97,9 +97,9 @@ class ArgParse(object):
                     f = urlopen(template)
                     data = f.readlines()
                     f.close()
-            except HTTPError, e:
+            except HTTPError as e:
                 error_exit("HTTP Error: %s %s"%(str(e.code), template))
-            except URLError, e:
+            except URLError as e:
                 error_exit("URL Error: %s %s"%(str(e.reason), template))
         else:
             error_exit("Input template syntax error: '%s'"%template)
