@@ -10,9 +10,8 @@ tigereye
     :target: https://travis-ci.org/grnydawn/tigereye
 
 .. image:: https://readthedocs.org/projects/tigereye/badge/?version=latest
-        :target: https://tigereye.readthedocs.io/en/latest/?badge=latest
+        :target:https://grnydawn.github.io/tigereyedocs 
         :alt: Documentation Status
-
 
 
 
