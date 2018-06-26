@@ -37,13 +37,14 @@ def main(argv):
         attrs['pyplot'] = plt
 
         # argument and template processing
+        #argv = [item.decode("utf-8") for item in argv]
         args = teye_parse(argv, attrs)
-
-        # import data
-        teye_import_data(args, attrs)
 
         # data collection
         teye_load(args, attrs)
+
+        # import data
+        teye_import_data(args, attrs)
 
         # plotting variables
         teye_var(args, attrs)

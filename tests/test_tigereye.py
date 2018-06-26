@@ -198,3 +198,12 @@ def test_page_calc(tempdir):
 
     _main(argv, tempdir)
 
+def test_import_data(tempdir):
+    outfile = '%s/test.pdf'%tempdir
+    argv = [
+        "--import-data", "x:varx, y:vary = '%s'"%template_sampel1,
+        "-p", "plot, x, y, label='line1'"
+    ]
+
+    _main(argv, tempdir)
+

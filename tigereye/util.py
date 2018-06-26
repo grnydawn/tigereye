@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """tigereye utility module."""
 from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+                        print_function)
 
 import sys
+import os
 import re
-
+import shlex
+import io
 from .error import UsageError
 
 _DEBUG = True
@@ -74,6 +76,18 @@ _DEBUG_LEVEL = 3 # 0: no debug, 1~3: higher is more debugging information
 
 PY3 = sys.version_info >= (3, 0)
 
+try:
+    if PY3:
+        from urllib.request import urlopen
+        from urllib.parse import urlparse
+    else:
+        from urllib2 import urlopen
+        from urlparse import urlparse
+    urllib_imported = True
+except ImportError as e:
+    urllib_imported = False
+
+
 def teye_eval(expr, g, **kwargs):
     try:
         g['__builtins__'] = builtins
@@ -93,7 +107,7 @@ def parse_funcargs(args_str, attrs):
     def _parse(*args, **kw_str):
         return args, kw_str
 
-    return teye_eval('_p(%s)'%args_str, attrs, _p=_parse)
+    return teye_eval(b'_p(%s)'%args_str, attrs, _p=_parse)
 
 
 def _parse_name(text, recompile):
@@ -112,3 +126,33 @@ def get_var(var):
 def get_did(did):
 
     return _parse_name(var, _re_did)
+
+def read_template(template):
+
+    data = None
+
+    if os.path.isfile(template):
+        with open(template, mode="r") as f:
+            data = f.readlines()
+
+    elif urllib_imported:
+        try:
+            if urlparse(template).netloc:
+                f = urlopen(template)
+                data = f.readlines()
+                f.close()
+        except HTTPError as e:
+            error_exit("HTTP Error: %s %s"%(str(e.code), template))
+        except URLError as e:
+            error_exit("URL Error: %s %s"%(str(e.reason), template))
+    else:
+        error_exit("Input template syntax error: '%s'"%template)
+
+    if data:
+        lines = []
+        for line in data:
+            line = line.strip()
+            if line and line[-1] == '\\':
+                line = line[:-1]
+            lines.append(line)
+        return shlex.split(' '.join(lines))
