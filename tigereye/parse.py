@@ -27,7 +27,7 @@ class ArgParse(object):
     def __init__(self, argv):
 
         self._template, newargv = self._handle_template(argv)
-        self._args = self._parse_arguments(newargv)
+        self._actions, self._args = self._parse_arguments(newargv)
 
     def usage(self):
         return 'Usage: T.B.D.'
@@ -43,8 +43,16 @@ class ArgParse(object):
             if self._args[name] is None:
                 if self._template is not None:
                     return getattr(self._template, name)
+            elif self._actions[name].__class__.__name__ == '_AppendAction' and \
+                self._template is not None:
+                _targs = getattr(self._template, name)
+                if _targs:
+                    return self._args[name] + _targs
+                else:
+                    return self._args[name]
             else:
                 return self._args[name]
+
             return None
 
         raise AttributeError(
@@ -162,13 +170,21 @@ class ArgParse(object):
         parser.add_argument('--front-page', metavar='front_page', action='append', help='importing front page')
         parser.add_argument('--back-page', metavar='back_page', action='append', help='importing back page')
         parser.add_argument('--import-data', metavar='import_data', action='append', help='importing data')
+        parser.add_argument('--import-plot', metavar='import_plot', action='append', help='importing plot')
         parser.add_argument('--noshow', action='store_true', default=False, help='prevent showing plot on screen.')
         parser.add_argument('--noplot', action='store_true', default=False, help='prevent generating plot.')
         parser.add_argument('--version', action='version', version='tigereye version %s'%sys.modules['tigereye'].__version__)
 
+        actions = {}
+        for action in parser._get_optional_actions():
+            for opt in action.option_strings:
+                actions[opt.lstrip("-").replace("-", "_")] = action
+        for action in parser._get_positional_actions():
+            actions[action.dest.replace("-", "_")] = action
+
         parsed_args = parser.parse_args(argv)
 
-        return dict((k, v) for k, v in parsed_args._get_kwargs())
+        return actions , dict((k, v) for k, v in parsed_args._get_kwargs())
 
 
 def teye_parse(argv, attrs):

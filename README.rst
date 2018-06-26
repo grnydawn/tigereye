@@ -9,11 +9,6 @@ tigereye
 .. image:: https://img.shields.io/travis/grnydawn/tigereye.svg
     :target: https://travis-ci.org/grnydawn/tigereye
 
-.. image:: https://readthedocs.org/projects/tigereye/badge/?version=latest
-        :target: https://tigereye.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
-
-
 
 A reusable data-manipulation and plotting tool
 
@@ -155,9 +150,9 @@ Multi-page PDF file is generated .
         --data-format "numpytext, delimiter=','" \
         -x "label='X', fontsize=12" \
         -y "label='Y', fontsize=12" \
-        --pages "len(d0), page_names=['Page-%d'%n for n in range(len(d0))], pdf_merge=True" \
+        --pages "len(d0), pdf_merge=True" \
         -p "plot, numpy.arange(len(d0)), d0[page_num, :], label='line-%d'%page_num" \
-        -t "page_names[page_num]" \
+        -t "'Page-%d'%page_num" \
         -s "'sample.pdf'" \
         --noshow \
         -g \
