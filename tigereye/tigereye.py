@@ -27,10 +27,11 @@ def main(argv):
         # import core libraries
         import os
         import numpy
-        import matplotlib.pyplot as plt
+        # folloing if block should be located "before" any matlablib use
         if os.environ.get('DISPLAY','') == '':
             import matplotlib
             matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
 
         attrs['numpy'] = numpy
         attrs['pyplot'] = plt
