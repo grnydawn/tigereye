@@ -2,11 +2,12 @@
 """tigereye main module."""
 from __future__ import absolute_import
 
+import os
 import copy
 
 # import tigereye features
 from .util import (support_message, error_exit, parse_funcargs, teye_eval,
-    read_template, args_pop)
+    read_template, args_pop, teye_dict)
 from .error import InternalError, UsageError
 from .parse import teye_parse
 from .load import teye_load
@@ -22,12 +23,11 @@ def main(argv):
     try:
 
         # plotting environment
-        attrs = {}
+        attrs = teye_dict()
 
         # import core libraries
-        import os
         import numpy
-        # folloing if block should be located "before" any matlablib use
+
         if os.environ.get('DISPLAY','') == '':
             import matplotlib
             matplotlib.use('Agg')
@@ -37,7 +37,6 @@ def main(argv):
         attrs['pyplot'] = plt
 
         # argument and template processing
-        #argv = [item.decode("utf-8") for item in argv]
         args = teye_parse(argv, attrs)
 
         # data collection

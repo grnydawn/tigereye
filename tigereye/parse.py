@@ -133,6 +133,7 @@ class ArgParse(object):
         parser.add_argument('--back-page', metavar='back_page', action='append', help='importing back page')
         parser.add_argument('--import-data', metavar='import_data', action='append', help='importing data')
         parser.add_argument('--import-plot', metavar='import_plot', action='append', help='importing plot')
+        parser.add_argument('--import-function', metavar='import_function', action='append', help='importing function')
         parser.add_argument('--noshow', action='store_true', default=False, help='prevent showing plot on screen.')
         parser.add_argument('--noplot', action='store_true', default=False, help='prevent generating plot.')
         parser.add_argument('--version', action='version', version='tigereye version %s'%sys.modules['tigereye'].__version__)

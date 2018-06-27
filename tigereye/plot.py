@@ -13,9 +13,6 @@ from .util import (error_exit, teye_eval, parse_funcargs, get_var,
     get_axis, get_name, read_template, args_pop)
 from .parse import teye_parse
 
-# TODO: use utility functiion for attrs set attrs[key] = value
-# TODO: the utility function should check security
-
 def gen_plot(args, attrs):
 
     # plotting

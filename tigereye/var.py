@@ -8,13 +8,34 @@ import re
 import copy
 
 from .util import (teye_eval, _DEBUG, get_var, parse_funcargs,
-    read_template)
+    read_template, import_module)
 from .error import UsageError
 from .parse import teye_parse
 
 _re_did = re.compile(r'(?P<did>d\d+)(?P<others>.*)')
 
 def teye_var(args, attrs):
+
+    # import external function
+    if args.import_function:
+        for import_function_opt in args.import_function:
+            importvars, import_args = [i.strip() for i in import_function_opt.split('=', 1)]
+            newattrs = copy.copy(attrs)
+            if import_args:
+                mod = import_module(teye_eval(import_args, newattrs))
+                if importvars:
+                    for vpair in importvars.split(','):
+                        vpair = vpair.split(':')
+                        if len(vpair) == 1:
+                            attrs[vpair[0].strip()] = mod[vpair[0].strip()]
+                        elif len(vpair) == 2:
+                            attrs[vpair[0].strip()] = mod[vpair[1].strip()]
+                        else:
+                            raise UsageError('The syntax of import function is not correct: %s'%importvars)
+                else:
+                    raise UsageError('There is no function to import: %s'%import_function_opt)
+            else:
+                raise UsageError('The syntax of function import is not correct: %s'%import_args)
 
     # import external data
     if args.import_data:

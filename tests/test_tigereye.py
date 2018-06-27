@@ -14,6 +14,7 @@ curdir = os.path.dirname(os.path.realpath(__file__))
 numpy_text_data1 = "%s/data/numpy_text_data1.csv"%curdir
 csv_text_data1 = "%s/data/csv_text_data1.csv"%curdir
 remote_csv_data1 = "https://raw.githubusercontent.com/grnydawn/tigereye/master/data/simple.csv"
+local_function1 = "%s/function/sample1.py"%curdir
 template_sampel1 = "%s/templates/sample1.tgr"%curdir
 
 @pytest.fixture(scope="session")
@@ -242,3 +243,18 @@ def test_import_backpage(tempdir):
     ]
 
     _main(argv, tempdir)
+
+def test_import_function(tempdir):
+    outfile = '%s/test.pdf'%tempdir
+    argv = [
+        "--import-function", "f2c, conv:c2f ='%s'"%local_function1,
+        "-v", "x=numpy.arange(10)",
+        "-v", "y1=[f2c(f) for f in x]",
+        "-v", "y2=[conv(c) for c in x]",
+        "-p", "plot, x, y1, label='f2c'",
+        "-p", "plot, x, y2, label='c2f'",
+        "-l",
+    ]
+
+    _main(argv, tempdir)
+

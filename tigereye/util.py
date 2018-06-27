@@ -79,6 +79,12 @@ _DEBUG_LEVEL = 3 # 0: no debug, 1~3: higher is more debugging information
 
 PY3 = sys.version_info >= (3, 0)
 
+class teye_dict(dict):
+    def __setitem__(self, key, item):
+        if key in globals()['__builtins__']:
+            raise UsageError("builtin name, '%s', can not be overriden."%key)
+        super(teye_dict, self).__setitem__(key, item)
+
 try:
     if PY3:
         from urllib.request import urlopen
@@ -98,6 +104,15 @@ def teye_eval(expr, g, **kwargs):
         return eval(expr, g, kwargs)
     except NameError as err:
         raise UsageError(str(err))
+
+def import_module(path):
+
+    data = read_file(path)
+
+    if data:
+        l = {}
+        exec(''.join(data), builtins, l)
+        return l
 
 def error_exit(msg):
     print("Error: %s"%msg)
@@ -156,18 +171,18 @@ def get_name(arg):
     except UsageError as err:
         return arg, ''
 
-def read_template(template):
+def read_file(path):
 
     data = None
 
-    if os.path.isfile(template):
-        with open(template, mode="r") as f:
+    if os.path.isfile(path):
+        with open(path, mode="r") as f:
             data = f.readlines()
 
     elif urllib_imported:
         try:
-            if urlparse(template).netloc:
-                f = urlopen(template)
+            if urlparse(path).netloc:
+                f = urlopen(path)
                 if PY3:
                     data = f.read().decode('utf-8')
                     data = data.split('\n')
@@ -180,6 +195,12 @@ def read_template(template):
             error_exit("URL Error: %s %s"%(str(e.reason), template))
     else:
         error_exit("Input template syntax error: '%s'"%template)
+
+    return data
+
+def read_template(template):
+
+    data = read_file(template)
 
     if data:
         lines = []
