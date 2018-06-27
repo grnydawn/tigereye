@@ -3,6 +3,6 @@
 
 __author__ = """Youngsung Kim"""
 __email__ = 'grnydawn@gmail.com'
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 
 from .tigereye import main
