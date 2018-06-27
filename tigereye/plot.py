@@ -16,14 +16,6 @@ from .parse import teye_parse
 # TODO: use utility functiion for attrs set attrs[key] = value
 # TODO: the utility function should check security
 
-def import_frontpage(args, attrs):
-    if args.front_page:
-        import pdb; pdb.set_trace()
-
-def import_backpage(args, attrs):
-    if args.back_page:
-        import pdb; pdb.set_trace()
-
 def gen_plot(args, attrs):
 
     # plotting
@@ -136,22 +128,6 @@ def axes_main_functions(args, attrs):
 
 def teye_plot(args, attrs):
 
-    # multipage
-    if args.book:
-        vargs, kwargs = parse_funcargs(args.book, attrs)
-        if vargs:
-            bookfmt = kwargs.pop('format', 'pdf').lower()
-            attrs['_page_save'] = kwargs.pop('page_save', False)
-            kwargs = ', '.join(['%s=%s'%(k,v) for k,v in kwargs.items()])
-            if kwargs:
-                kwargs = ', %s'%kwargs
-            for target in vargs:
-                if bookfmt == 'pdf':
-                    from matplotlib.backends.backend_pdf import PdfPages
-                    attrs['_pdf_pages'] =  teye_eval('_p("%s"%s)'%(target, kwargs), attrs, _p=PdfPages)
-                else:
-                    raise UsageError('Book format, "%s", is not supported.'%bookfmt)
-
     # pages setting
     if args.pages:
         vargs, kwargs = parse_funcargs(args.pages, attrs)
@@ -213,6 +189,8 @@ def teye_plot(args, attrs):
                                 attrs['plots'].extend(newattrs['plots'])
                             else:
                                 attrs['plots'] = newattrs['plots']
+                    else:
+                        raise UsageError('The syntax of import plot is not correct: %s'%importplots)
                 else:
                     raise UsageError('The syntax of import plot is not correct: %s'%import_args)
 
@@ -296,8 +274,4 @@ def teye_plot(args, attrs):
             attrs['pyplot'].show()
 
         teye_eval('pyplot.close(figure)', attrs)
-
-    # multi-page closing
-    if '_pdf_pages' in attrs:
-        attrs['_pdf_pages'].close()
 

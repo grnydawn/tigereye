@@ -213,8 +213,32 @@ def test_import_plot(tempdir):
     argv = [
         "-v", "x=numpy.linspace(0, 2*numpy.pi)",
         "-v", "y=numpy.sin(x)",
-        "--import-plot", "axlocal:ax = 111, '%s', varx=x, vary=y"%template_sampel1
+        "--import-plot", "axlocal:ax = 212, '%s', varx=x, vary=y"%template_sampel1
     ]
 
     _main(argv, tempdir)
 
+def test_import_frontpage(tempdir):
+    outfile = '%s/test.pdf'%tempdir
+    argv = [
+        "-v", "x=numpy.linspace(0, 2*numpy.pi)",
+        "-v", "y=numpy.cos(x)",
+        "--front-page", "'%s'"%template_sampel1,
+        "-p", "plot, x, y",
+        "--book", "'%s', page_save=False"%outfile,
+    ]
+
+    _main(argv, tempdir)
+
+def test_import_backpage(tempdir):
+    outfile = '%s/test.pdf'%tempdir
+    argv = [
+        "-v", "x=numpy.linspace(0, 2*numpy.pi)",
+        "-v", "y=numpy.cos(x)",
+        "--front-page", "'%s'"%template_sampel1,
+        "--back-page", "'%s'"%template_sampel1,
+        "-p", "plot, x, y",
+        "--book", "'%s', page_save=False"%outfile,
+    ]
+
+    _main(argv, tempdir)

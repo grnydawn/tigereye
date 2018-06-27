@@ -83,8 +83,9 @@ try:
     if PY3:
         from urllib.request import urlopen
         from urllib.parse import urlparse
+        from urllib.error import HTTPError, URLError
     else:
-        from urllib2 import urlopen
+        from urllib2 import urlopen, HTTPError, URLError
         from urlparse import urlparse
     urllib_imported = True
 except ImportError as e:
@@ -167,7 +168,11 @@ def read_template(template):
         try:
             if urlparse(template).netloc:
                 f = urlopen(template)
-                data = f.readlines()
+                if PY3:
+                    data = f.read().decode('utf-8')
+                    data = data.split('\n')
+                else:
+                    data = f.readlines()
                 f.close()
         except HTTPError as e:
             error_exit("HTTP Error: %s %s"%(str(e.code), template))
