@@ -21,7 +21,7 @@ template_sampel1 = "%s/templates/sample1.tgr"%curdir
 def tempdir(tmpdir_factory):
     return tmpdir_factory.getbasetemp()
 
-#def test_main():
+#def ttest_main():
 #    assert main(["[1,2,3]"]) == 0
 
 def _main(argv, tempdir):
@@ -30,13 +30,13 @@ def _main(argv, tempdir):
     if os.path.isfile(outfile):
         os.remove(outfile)
 
-    argv.extend(["-s", "'%s'"%outfile, "--noshow"])
-    #argv.extend(["-s", "'%s'"%outfile])
+    #argv.extend(["-s", "'%s'"%outfile, "--noshow"])
+    argv.extend(["-s", "'%s'"%outfile])
     main(argv)
 
     assert os.path.isfile(outfile)
 
-def test_array_in_cmdline(tempdir):
+def ttest_array_in_cmdline(tempdir):
     argv = [
         "[[1,2,3], [1,4,9]]", "[4,5,6]",
         "-v", "l1=d1",
@@ -51,7 +51,7 @@ def test_array_in_cmdline(tempdir):
 
     _main(argv, tempdir)
 
-def test_numpy_data(tempdir):
+def ttest_numpy_data(tempdir):
     argv = [
         "-v", "l1=numpy.arange(3)",
         "-v", "l2=numpy.random~rand(3)",
@@ -66,7 +66,7 @@ def test_numpy_data(tempdir):
 
     _main(argv, tempdir)
 
-def test_numpy_text(tempdir):
+def ttest_numpy_text(tempdir):
     argv = [
         "%s"%numpy_text_data1,
         "--data-format", "numpytext, delimiter=' '",
@@ -78,7 +78,7 @@ def test_numpy_text(tempdir):
 
     _main(argv, tempdir)
 
-def test_csv_file(tempdir):
+def ttest_csv_file(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
         "%s"%csv_text_data1,
@@ -97,7 +97,7 @@ def test_csv_file(tempdir):
 
     _main(argv, tempdir)
 
-def test_axis_opt(tempdir):
+def ttest_axis_opt(tempdir):
     argv = [
         "[1,2,3]", "[4,5,6]",
         "-v", "l1=d0",
@@ -117,7 +117,7 @@ def test_axis_opt(tempdir):
 
     _main(argv, tempdir)
 
-def test_axis_opt(tempdir):
+def ttest_axis_opt(tempdir):
     argv = [
         "[1,2,3]", "[4,5,6]",
         "-v", "l1=d0",
@@ -139,7 +139,7 @@ def test_axis_opt(tempdir):
 
     _main(argv, tempdir)
 
-def test_remote_csv(tempdir):
+def ttest_remote_csv(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
         "%s"%remote_csv_data1, "['Page1', 'Page2']",
@@ -156,7 +156,7 @@ def test_remote_csv(tempdir):
 
     _main(argv, tempdir)
 
-def test_template1(tempdir):
+def ttest_template1(tempdir):
     argv = [
         "-i", "%s"%template_sampel1,
         "-t", "'My Plot'",
@@ -165,14 +165,14 @@ def test_template1(tempdir):
     _main(argv, tempdir)
 
 
-def test_figure_text(tempdir):
+def ttest_figure_text(tempdir):
     argv = [
         "--figure", "text, 0.5, 0.5, 'Hello World!'",
     ]
 
     _main(argv, tempdir)
 
-def test_3D_line(tempdir):
+def ttest_3D_line(tempdir):
     argv = [
         "--ax", "ax= projection='3d'",
         "-v", "theta=numpy.linspace(-4 * numpy.pi, 4 * numpy.pi, 100)",
@@ -186,7 +186,7 @@ def test_3D_line(tempdir):
 
     _main(argv, tempdir)
 
-def test_page_calc(tempdir):
+def ttest_page_calc(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
         "-v", "i=numpy.linspace(0, 1)",
@@ -199,7 +199,7 @@ def test_page_calc(tempdir):
 
     _main(argv, tempdir)
 
-def test_import_data(tempdir):
+def ttest_import_data(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
         "--import-data", "x:varx, y:vary = '%s'"%template_sampel1,
@@ -209,7 +209,7 @@ def test_import_data(tempdir):
     _main(argv, tempdir)
 
 
-def test_import_plot(tempdir):
+def ttest_import_plot(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
         "-v", "x=numpy.linspace(0, 2*numpy.pi)",
@@ -219,7 +219,7 @@ def test_import_plot(tempdir):
 
     _main(argv, tempdir)
 
-def test_import_frontpage(tempdir):
+def ttest_import_frontpage(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
         "-v", "x=numpy.linspace(0, 2*numpy.pi)",
@@ -231,7 +231,7 @@ def test_import_frontpage(tempdir):
 
     _main(argv, tempdir)
 
-def test_import_backpage(tempdir):
+def ttest_import_backpage(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
         "-v", "x=numpy.linspace(0, 2*numpy.pi)",
@@ -244,7 +244,7 @@ def test_import_backpage(tempdir):
 
     _main(argv, tempdir)
 
-def test_import_function(tempdir):
+def ttest_import_function(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
         "--import-function", "f2c, conv:c2f ='%s'"%local_function1,
@@ -258,3 +258,20 @@ def test_import_function(tempdir):
 
     _main(argv, tempdir)
 
+def test_import_function(tempdir):
+    outfile = '%s/test.pdf'%tempdir
+    argv = [
+        "tests/data/wetdepa.slope.csv",
+        "--data-format", "csv, delimiter=';'",
+        "-v", "hwcnames = d0[:,2].unique(hwcnames)",
+        "--book", "'test.pdf'",
+        "--pages", "3",
+        "--page-calc", "X=numpy.compress(d0[:,2]==hwcnames[page_num], d0[:,3].astype(float))",
+        "--page-calc", "Y=numpy.compress(d0[:,2]==hwcnames[page_num], d0[:,4].astype(float))",
+        "-t", "hwcnames[page_num]",
+        "-p", "plot, X, Y",
+    ]
+
+    _main(argv, tempdir)
+
+    import pdb; pdb.set_trace()

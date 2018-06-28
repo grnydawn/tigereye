@@ -177,14 +177,15 @@ class RemoteDataMixin(object):
                 f = urlopen(datasrc)
                 data = f.read()
                 f.close()
+
+                f = tempfile.NamedTemporaryFile(delete=False)
+                f.write(data)
+                return f.name
+
         except HTTPError as e:
             error_exit("HTTP Error: %s %s"%(str(e.code), datasrc))
         except URLError as e:
             error_exit("URL Error: %s %s"%(str(e.reason), datasrc))
-
-        f = tempfile.NamedTemporaryFile(delete=False)
-        f.write(data)
-        return f.name
 
 class BuildMixin(object):
 
