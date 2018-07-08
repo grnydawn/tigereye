@@ -264,7 +264,7 @@ def test_import_function(tempdir):
         "tests/data/wetdepa.slope.csv",
         "--data-format", "csv, delimiter=';'",
         "-v", "hwcnames = d0[:,2].unique(hwcnames)",
-        "--book", "'test.pdf'",
+        "--book", "'%s'"%outfile,
         "--pages", "3",
         "--page-calc", "X=numpy.compress(d0[:,2]==hwcnames[page_num], d0[:,3].astype(float))",
         "--page-calc", "Y=numpy.compress(d0[:,2]==hwcnames[page_num], d0[:,4].astype(float))",
@@ -273,5 +273,3 @@ def test_import_function(tempdir):
     ]
 
     _main(argv, tempdir)
-
-    import pdb; pdb.set_trace()

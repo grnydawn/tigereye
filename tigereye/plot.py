@@ -270,5 +270,7 @@ def teye_plot(args, attrs):
         if not args.noshow:
             attrs['pyplot'].show()
 
+        teye_eval('figure.clear()', attrs)
         teye_eval('pyplot.close(figure)', attrs)
+        del attrs['figure']
 
