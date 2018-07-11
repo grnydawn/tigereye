@@ -11,7 +11,7 @@ import abc
 import tempfile
 
 from .error import UsageError
-from .util import PY3, teye_eval, error_exit
+from .util import PY3, _eval, error_exit
 
 _re_datafmt = re.compile(r'(d(?P<data>\d+)\s*:)?\s*(?P<format>\w+)\s*,\s*(?P<others>.*)')
 
@@ -150,7 +150,7 @@ class Data(object):
             ''.join(others).replace('__WS__', ' '))
 
     def _dict(self, vname, params, attrs):
-        output = teye_eval('_f_(%s)'%params, attrs, _f_=dict)
+        output = _eval('_f_(%s)'%params, attrs, _f_=dict)
         if output is not None:
             return output
         else:
@@ -195,13 +195,13 @@ class BuildMixin(object):
 class NumpyMixin(object):
 
     def _lib_item(self, vname, cmd, attrs):
-        return teye_eval(vname+cmd, attrs)
+        return _eval(vname+cmd, attrs)
 
     def _lib_func(self, vname, cmd, params, attrs):
         func = attrs['numpy']
         for name in cmd.split('~'):
             func = getattr(func, name)
-        output = teye_eval('_f_(%s)'%params, attrs, _f_=func)
+        output = _eval('_f_(%s)'%params, attrs, _f_=func)
         if output is not None:
             return output
         else:
@@ -216,9 +216,9 @@ class NumpyArrayData(NumpyMixin, ValueData):
 
     def __init__(self, datasrc, args, attrs):
         if args:
-            self.data = teye_eval('numpy.asarray(%s, %s)'%(datasrc, args), attrs)
+            self.data = _eval('numpy.asarray(%s, %s)'%(datasrc, args), attrs)
         else:
-            self.data = teye_eval('numpy.asarray(%s)'%datasrc, attrs)
+            self.data = _eval('numpy.asarray(%s)'%datasrc, attrs)
 
 class NumpyBuildData(NumpyMixin, BuildMixin, ValueData):
 
@@ -243,7 +243,7 @@ class NumpyTextData(NumpyMixin, FileData, RemoteDataMixin):
             if args:
                 kwargs += ', %s'%args
 
-            self.data = teye_eval("numpy.genfromtxt('%s'%s)"%(fname, kwargs), attrs)
+            self.data = _eval("numpy.genfromtxt('%s'%s)"%(fname, kwargs), attrs)
         else:
             error_exit("Input argument syntax error: '%s, %s'"%(datasrc, args))
 
@@ -267,7 +267,7 @@ class CsvTextData(NumpyMixin, FileData, RemoteDataMixin):
 
             if args:
                 kwargs += ', %s'%args
-            self.data = teye_eval("numpy.genfromtxt('%s'%s)"%(fname, kwargs), attrs)
+            self.data = _eval("numpy.genfromtxt('%s'%s)"%(fname, kwargs), attrs)
         else:
             error_exit("Input argument syntax error: '%s, %s'"%(datasrc, args))
 
@@ -331,11 +331,15 @@ def teye_load(args, attrs):
                 data = srcfmts[idx][0](data_source, srcfmts[idx][1], attrs)
 
             if data:
-                attrs['d%d'%idx] = data
-                _data_objects.append(data)
+                _data_objects.append(data.data)
             else:
                 raise UsageError('"%s" is not loaded correctly.'%data_source)
 
     attrs['_build_handlers'] = _build_handlers
 
-    attrs['_data_objects'] = _data_objects
+    if len(_data_objects) == 0:
+        attrs['D'] = None
+    elif len(_data_objects) == 1:
+        attrs['D'] = _data_objects[0]
+    else:
+        attrs['D'] = _data_objects

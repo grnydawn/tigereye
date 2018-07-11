@@ -20,3 +20,6 @@ class UsageError(Error):
     def error_message(self):
         return self.msg
 
+
+class NormalExit(Error):
+    pass

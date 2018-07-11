@@ -9,7 +9,7 @@ import argparse
 import tempfile
 
 
-from .util import read_template
+from .util import read_template, funcargs_eval, teye_dict
 
 class ArgParse(object):
 
@@ -149,9 +149,98 @@ class ArgParse(object):
 
         return actions , dict((k, v) for k, v in parsed_args._get_kwargs())
 
+def _get_cmdsyntax(docs):
 
-def teye_parse(argv, attrs):
+    line = ''
+    lines = []
 
-    args = ArgParse(argv)
+    for d in docs[1:]:
+        if d.startswith("'-"):
+            vargs, kwargs = funcargs_eval(teye_dict(), d)
+            line = '['
+            if len(vargs) > 1:
+                line += ' | '.join(vargs)
+            elif len(vargs) == 1:
+                line += vargs[0]
 
-    return args
+            if 'metavar' in kwargs:
+                line += ' ' + kwargs['metavar'].upper()
+            line += ']'
+            if len(line) > 80:
+                lines.append(line)
+                line = ''
+
+    if line:
+        lines.append(line)
+
+    return '\n'.join(lines)
+
+_usage = '''
+tigereye {gopts}
+    <command> [<args>]
+
+The commands are:
+{scmds}
+'''
+
+def _add_arguments( parser, docs):
+
+    for d in docs[1:]:
+        if d.startswith("'-"):
+            vargs, kwargs = funcargs_eval(teye_dict(), d)
+            parser.add_argument(*vargs, **kwargs)
+
+def _handle_global_opts(args):
+    pass
+
+
+def _help(args, attrs):
+    """help command
+    """
+    pass
+
+def teye_parse(argv, attrs, commands):
+    """Tigereye parser routine
+
+        '--dummy', metavar='<dd>', help='Test'
+    """
+
+    commands['help'] = (_help.__doc__.split('\n'), _help)
+
+    # global options
+    clsdocs = [l.strip() for l in teye_parse.__doc__.split('\n')]
+
+    gopts = _get_cmdsyntax(clsdocs)
+    scmds="\n".join(["\t%s\t%s"%(c,h[0]) for c,h in commands.items()])
+
+    parser = argparse.ArgumentParser(
+        description=clsdocs[0],
+        usage=_usage.format(gopts=gopts, scmds=scmds))
+
+    _add_arguments(parser, clsdocs)
+    #parser.add_argument('command', nargs='?', help='Subcommand to run')
+
+    cur_argv = []
+    cmd_opts = [cur_argv]
+    for item in argv:
+        if item == '--':
+            cur_argv = []
+            cmd_opts.append(cur_argv)
+        else:
+            cur_argv.append(item)
+
+    global_args, command_args = parser.parse_known_args(cmd_opts[0])
+    #if parsed_args.command:
+    #    if parsed_args.command not in commands:
+    #        unknown_args.insert(0, parsed_args.command)
+    #    else:
+
+    _handle_global_opts(global_args)
+
+    if command_args:
+        cmd_opts.insert(0, command_args)
+
+    # split options
+    for cur_argv in cmd_opts:
+
+        yield ArgParse(cur_argv)

@@ -9,9 +9,83 @@ import re
 import copy
 
 from .error import UsageError
-from .util import (error_exit, teye_eval, parse_funcargs, get_var,
-    get_axis, get_name, read_template, args_pop)
+from .util import (error_exit, _eval, read_template, funcargs_eval,
+    get_axis, get_name, args_pop)
 from .parse import teye_parse
+from .load import teye_load
+from .var import teye_var
+
+def cmd_plot(args, attrs):
+    """process plot command
+    """
+
+    # exit if noplot option exists
+    #if 'return' in attrs:
+    #    return attrs['return']
+
+    # multipage
+    if args.book:
+        vargs, kwargs = funcargs_eval(attrs, args.book)
+        if vargs:
+            bookfmt = kwargs.pop('format', 'pdf').lower()
+            attrs['_page_save'] = kwargs.pop('page_save', False)
+            kwargs = ', '.join(['%s=%s'%(k,v) for k,v in kwargs.items()])
+            if kwargs:
+                kwargs = ', %s'%kwargs
+            for target in vargs:
+                if bookfmt == 'pdf':
+                    from matplotlib.backends.backend_pdf import PdfPages
+                    attrs['_pdf_pages'] =  _eval('_p("%s"%s)'%(target, kwargs), attrs, _p=PdfPages)
+                else:
+                    raise UsageError('Book format, "%s", is not supported.'%bookfmt)
+
+    attrs_save = copy.copy(attrs)
+    if args.front_page:
+        for front_page_opt in args.front_page:
+            newattrs = copy.copy(attrs)
+            templates, kwargs = funcargs_eval(newattrs, front_page_opt)
+            if len(templates) == 1:
+                opts = read_template(templates[0])
+                if args.noshow:
+                    opts.append("--noshow")
+                if args.save:
+                    for save_opt in args.save:
+                        opts.extend(["--save", save_opt])
+                args_pop(opts, '--book', 1)
+                newargs = teye_parse(opts, newattrs)
+                newattrs.update(kwargs)
+                teye_load(newargs, newattrs)
+                teye_var(newargs, newattrs)
+                teye_plot(newargs, newattrs)
+            else:
+                raise UsageError('The syntax of import plot is not correct: %s'%import_args)
+
+    # plot generation
+    teye_plot(args, attrs)
+
+    if args.back_page:
+        for back_page_opt in args.back_page:
+            newattrs = attrs_save
+            templates, kwargs = funcargs_eval(newattrs, back_page_opt)
+            if len(templates) == 1:
+                opts = read_template(templates[0])
+                if args.noshow:
+                    opts.append("--noshow")
+                if args.save:
+                    for save_opt in args.save:
+                        opts.extend(["--save", save_opt])
+                args_pop(opts, '--book', 1)
+                newargs = teye_parse(opts, newattrs)
+                newattrs.update(kwargs)
+                teye_load(newargs, newattrs)
+                teye_var(newargs, newattrs)
+                teye_plot(newargs, newattrs)
+            else:
+                raise UsageError('The syntax of import plot is not correct: %s'%import_args)
+
+    # multi-page closing
+    if '_pdf_pages' in attrs:
+        attrs['_pdf_pages'].close()
 
 def gen_plot(args, attrs):
 
@@ -28,7 +102,7 @@ def gen_plot(args, attrs):
             else:
                 pname = plotarg[:poscomma]
                 pargs = plotarg[poscomma+1:]
-                plot_handle = teye_eval('%s.%s(%s)'%(ax, pname, pargs), attrs)
+                plot_handle = _eval('%s.%s(%s)'%(ax, pname, pargs), attrs)
 
                 try:
                     for p in plot_handle:
@@ -50,7 +124,7 @@ def axes_main_functions(args, attrs):
     if args.title:
         for title_arg in args.title:
             ax, title = get_axis(title_arg)
-            teye_eval('%s.set_title(%s)'%(ax, title), attrs)
+            _eval('%s.set_title(%s)'%(ax, title), attrs)
 
 
     # x-axis setting
@@ -59,7 +133,7 @@ def axes_main_functions(args, attrs):
             ax, xaxis = get_axis(xaxis_arg)
 
             set_xfuncs =  dict((x, getattr(attrs[ax], x)) for x in dir(attrs[ax]) if x.startswith('set_x'))
-            vargs, kwargs = parse_funcargs(xaxis, attrs)
+            vargs, kwargs = funcargs_eval(attrs, xaxis)
 
             for name, func in set_xfuncs.items():
                 funckey = name[5:] # set_x functions
@@ -74,7 +148,7 @@ def axes_main_functions(args, attrs):
             ax, yaxis = get_axis(yaxis_arg)
 
             set_yfuncs =  dict((y, getattr(attrs[ax], y)) for y in dir(attrs[ax]) if y.startswith('set_y'))
-            vargs, kwargs = parse_funcargs(yaxis, attrs)
+            vargs, kwargs = funcargs_eval(attrs, yaxis)
 
             for name, func in set_yfuncs.items():
                 funckey = name[5:]
@@ -89,7 +163,7 @@ def axes_main_functions(args, attrs):
             ax, zaxis = get_axis(zaxis_arg)
 
             set_zfuncs =  dict((z, getattr(attrs[ax], z)) for z in dir(attrs[ax]) if z.startswith('set_z'))
-            vargs, kwargs = parse_funcargs(zaxis, attrs)
+            vargs, kwargs = funcargs_eval(attrs, zaxis)
 
             for name, func in set_zfuncs.items():
                 funckey = name[5:]
@@ -108,7 +182,7 @@ def axes_main_functions(args, attrs):
         for grid_arg in args.grid:
             if grid_arg:
                 ax, grid = get_axis(grid_arg)
-                teye_eval('%s.grid(%s)'%(ax, grid), attrs)
+                _eval('%s.grid(%s)'%(ax, grid), attrs)
 
     # legend setting 
     if args.l:
@@ -120,14 +194,14 @@ def axes_main_functions(args, attrs):
         for legend_arg in args.legend:
             if legend_arg:
                 ax, legend = get_axis(legend_arg)
-                teye_eval('%s.legend(%s)'%(ax, legend), attrs)
+                _eval('%s.legend(%s)'%(ax, legend), attrs)
 
 
 def teye_plot(args, attrs):
 
     # pages setting
     if args.pages:
-        vargs, kwargs = parse_funcargs(args.pages, attrs)
+        vargs, kwargs = funcargs_eval(attrs, args.pages)
 
         if vargs:
             attrs['num_pages'] = vargs[-1]
@@ -145,15 +219,17 @@ def teye_plot(args, attrs):
 
         if args.page_calc:
             for page_calc in args.page_calc:
-                vname, formula = get_var(page_calc)
-                attrs[vname] = teye_eval(formula, attrs)
+                vargs, kwargs = funcargs_eval(attrs, page_calc)
+                #vname, formula = get_var(page_calc)
+                #[vname] = _eval(formula, attrs)
+                attrs.update(kwargs)
 
 
         # figure setting
         if 'figure' in attrs and attrs['figure']:
             pass
         elif args.f:
-            attrs['figure'] = teye_eval('pyplot.figure(%s)'%args.f, attrs)
+            attrs['figure'] = _eval('pyplot.figure(%s)'%args.f, attrs)
         else:
             attrs['figure'] = attrs['pyplot'].figure()
 
@@ -163,7 +239,7 @@ def teye_plot(args, attrs):
             for import_plot_opt in args.import_plot:
                 importplots, import_args = [i.strip() for i in import_plot_opt.split('=', 1)]
                 newattrs = copy.copy(attrs)
-                templates, kwargs = parse_funcargs(import_args, newattrs)
+                templates, kwargs = funcargs_eval(newattrs, import_args)
                 if len(templates) == 2:
                     opts = read_template(templates[1])
                     if args.noshow:
@@ -196,14 +272,14 @@ def teye_plot(args, attrs):
             for ax_arg in args.ax:
                 axname, others = get_axis(ax_arg, delimiter='=')
                 if axname:
-                    vargs, kwargs = parse_funcargs(others, attrs)
+                    vargs, kwargs = funcargs_eval(attrs, others)
                     if 'projection' in kwargs and kwargs['projection'] == '3d':
                          from mpl_toolkits.mplot3d import Axes3D
                          attrs['Axes3D'] = Axes3D
                     if len(vargs) == 0 or not isinstance(vargs[0], int):
-                        attrs[axname] = teye_eval('figure.add_subplot(111, %s)'%others, attrs)
+                        attrs[axname] = _eval('figure.add_subplot(111, %s)'%others, attrs)
                     else:
-                        attrs[axname] = teye_eval('figure.add_subplot(%s)'%others, attrs)
+                        attrs[axname] = _eval('figure.add_subplot(%s)'%others, attrs)
                 else:
                     raise UsageError('Wrong axis option: %s'%ax_arg)
         elif not args.import_plot:
@@ -224,9 +300,9 @@ def teye_plot(args, attrs):
             for fig_arg in args.figure:
                 name, others = get_name(fig_arg)
                 if others:
-                    teye_eval('figure.%s(%s)'%(name, others), attrs)
+                    _eval('figure.%s(%s)'%(name, others), attrs)
                 else:
-                    teye_eval('figure.%s()'%name, attrs)
+                    _eval('figure.%s()'%name, attrs)
 
         # generate plots
         gen_plot(args, attrs)
@@ -240,12 +316,12 @@ def teye_plot(args, attrs):
                 ax, arg = get_axis(axes_arg)
                 name, others = get_name(arg)
                 if others:
-                    teye_eval('%s.%s(%s)'%(ax, name, others), attrs)
+                    _eval('%s.%s(%s)'%(ax, name, others), attrs)
                 else:
-                    teye_eval('ax.%s()'%name, attrs)
+                    _eval('ax.%s()'%name, attrs)
         elif not attrs['plots']:
-            if len(attrs['_data_objects']) > 0:
-                for data_obj in attrs['_data_objects']:
+            if len(attrs['D']) > 0:
+                for data_obj in attrs['D']:
                     attrs['ax'].plot(data_obj.get_data('', '', attrs))
             elif not args.figure:
                 error_exit("There is no data to plot.")
@@ -261,16 +337,16 @@ def teye_plot(args, attrs):
                     others = ', %s'%others
                 if '_pdf_pages' in attrs:
                     if attrs['_page_save']:
-                        teye_eval('figure.savefig(%s%s)'%(name, others), attrs)
-                    teye_eval('_pdf_pages.savefig(figure=figure)', attrs)
+                        _eval('figure.savefig(%s%s)'%(name, others), attrs)
+                    _eval('_pdf_pages.savefig(figure=figure)', attrs)
                 else:
-                    teye_eval('figure.savefig(%s%s)'%(name, others), attrs)
+                    _eval('figure.savefig(%s%s)'%(name, others), attrs)
 
         # displyaing an image on screen
         if not args.noshow:
             attrs['pyplot'].show()
 
-        teye_eval('figure.clear()', attrs)
-        teye_eval('pyplot.close(figure)', attrs)
+        _eval('figure.clear()', attrs)
+        _eval('pyplot.close(figure)', attrs)
         del attrs['figure']
 
