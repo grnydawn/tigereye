@@ -9,7 +9,8 @@ import argparse
 import tempfile
 
 
-from .util import read_template, funcargs_eval, teye_dict
+from .util import (read_template, funcargs_eval, teye_dict,
+    teye_commands)
 
 class ArgParse(object):
 
@@ -197,15 +198,21 @@ def _handle_global_opts(args):
 def _help(args, attrs):
     """help command
     """
+
     pass
 
-def teye_parse(argv, attrs, commands):
+teye_commands['help'] = _help
+
+def teye_parse(argv, attrs):
     """Tigereye parser routine
 
         '--dummy', metavar='<dd>', help='Test'
     """
 
-    commands['help'] = (_help.__doc__.split('\n'), _help)
+    commands = {
+        'plot': (teye_commands['plot'].__doc__.split('\n'), teye_commands['plot']),
+        'help': (teye_commands['help'].__doc__.split('\n'), teye_commands['help'])
+    }
 
     # global options
     clsdocs = [l.strip() for l in teye_parse.__doc__.split('\n')]

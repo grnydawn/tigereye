@@ -10,7 +10,7 @@ import copy
 
 from .error import UsageError
 from .util import (error_exit, _eval, read_template, funcargs_eval,
-    get_axis, get_name, args_pop)
+    get_axis, get_name, args_pop, teye_commands)
 from .parse import teye_parse
 from .load import teye_load
 from .var import teye_var
@@ -86,6 +86,8 @@ def cmd_plot(args, attrs):
     # multi-page closing
     if '_pdf_pages' in attrs:
         attrs['_pdf_pages'].close()
+
+teye_commands['plot'] = cmd_plot
 
 def gen_plot(args, attrs):
 

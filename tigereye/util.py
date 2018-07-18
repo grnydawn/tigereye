@@ -79,6 +79,8 @@ _DEBUG_LEVEL = 3 # 0: no debug, 1~3: higher is more debugging information
 
 PY3 = sys.version_info >= (3, 0)
 
+teye_commands = {}
+
 class teye_dict(dict):
 
     def __init__(self, *vargs, **kwargs):

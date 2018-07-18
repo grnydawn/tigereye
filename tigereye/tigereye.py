@@ -11,7 +11,7 @@ from .error import InternalError, UsageError, NormalExit
 from .parse import teye_parse
 from .load import teye_load
 from .var import teye_var
-from .plot import teye_plot, cmd_plot
+from .plot import cmd_plot
 
 def _import_libs(attrs):
 
@@ -51,10 +51,8 @@ def main(argv):
         # import core libraries
         _import_libs(attrs)
 
-        commands = {'plot':(cmd_plot.__doc__.split('\n'), cmd_plot)}
-
         # argument and template processing
-        for args in teye_parse(argv, attrs, commands):
+        for args in teye_parse(argv, attrs):
 
             # data collection
             teye_load(args, attrs)
