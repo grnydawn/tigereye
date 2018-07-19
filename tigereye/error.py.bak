@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
 """tigereye main module."""
-    
+
+from __future__ import (absolute_import, division,
+                        print_function)
+
+
 class Error(Exception):
-    
+
     def __init__(self, msg):
         self.msg = msg
-     
-    def __str__(self):
-        return self.msg
-       
+
 class InternalError(Error):
-    pass    
+
+    def error_message(self):
+        return self.msg
 
 class UsageError(Error):
-    pass    
+
+    def error_message(self):
+        return self.msg
+
 
 class NormalExit(Error):
     pass
-
