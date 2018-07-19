@@ -29,7 +29,7 @@ def teye_entry_task(argv, gvars):
     task_argv = []
 
     for idx, arg in enumerate(argv):
-        if arg == "--":
+        if arg == "->":
             task_argv.extend(argv[idx+1:])
             break
         else:
@@ -42,7 +42,7 @@ def teye_entry_task(argv, gvars):
     if global_args.data[0] in tasks.keys():
         first_task = global_args.data.pop(0)
         task_argv.insert(0, first_task)
-        task_argv.insert(1, "--")
+        task_argv.insert(1, "->")
 
     if task_argv:
         if task_argv[0] not in tasks.keys():

@@ -16,7 +16,7 @@ def teye_task_parse(argv):
 
     task_argv = []
     for arg in argv:
-        if arg == "--":
+        if arg == "->":
             if task_argv:
                 yield _parse(task_argv)
             task_argv = []
