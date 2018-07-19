@@ -3,13 +3,13 @@
 from __future__ import absolute_import
 
 import os
+import sys
 import copy
 
 # import tigereye features
 from .util import support_message, error_exit, teye_dict
 from .error import InternalError, UsageError, NormalExit
 from .parse import teye_parse
-from .load import teye_load
 from .var import teye_var
 from .plot import cmd_plot
 
@@ -38,7 +38,6 @@ def _import_libs(attrs):
         pass
 
 def entry():
-    import sys
     return main(sys.argv[1:])
 
 def main(argv):
@@ -52,15 +51,9 @@ def main(argv):
         _import_libs(attrs)
 
         # argument and template processing
-        for args in teye_parse(argv, attrs):
+        for cmd, args in teye_parse(argv, attrs):
 
-            # data collection
-            teye_load(args, attrs)
-
-            # plotting variables
-            teye_var(args, attrs)
-
-            cmd_plot(args, attrs)
+            cmd(args, attrs)
 
     except InternalError as err:
 
@@ -68,9 +61,9 @@ def main(argv):
         error_exit(support_message())
 
     except UsageError as err:
-
+        import pdb; pdb.set_trace()
         print(err.error_message())
-        error_exit(args.usage())
+        error_exit("UsageError")
 
     except ImportError as err:
 
@@ -84,5 +77,4 @@ def main(argv):
         return 0
 
 if __name__ == '__main__':
-    import sys
     sys.exit(main(sys.argv[1:]))

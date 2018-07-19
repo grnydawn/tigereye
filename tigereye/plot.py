@@ -12,7 +12,6 @@ from .error import UsageError
 from .util import (error_exit, _eval, read_template, funcargs_eval,
     get_axis, get_name, args_pop, teye_commands)
 from .parse import teye_parse
-from .load import teye_load
 from .var import teye_var
 
 def cmd_plot(args, attrs):
@@ -42,8 +41,7 @@ def cmd_plot(args, attrs):
     attrs_save = copy.copy(attrs)
     if args.front_page:
         for front_page_opt in args.front_page:
-            newattrs = copy.copy(attrs)
-            templates, kwargs = funcargs_eval(newattrs, front_page_opt)
+            templates, kwargs = funcargs_eval(attrs, front_page_opt)
             if len(templates) == 1:
                 opts = read_template(templates[0])
                 if args.noshow:
@@ -52,11 +50,11 @@ def cmd_plot(args, attrs):
                     for save_opt in args.save:
                         opts.extend(["--save", save_opt])
                 args_pop(opts, '--book', 1)
-                newargs = teye_parse(opts, newattrs)
-                newattrs.update(kwargs)
-                teye_load(newargs, newattrs)
-                teye_var(newargs, newattrs)
-                teye_plot(newargs, newattrs)
+                for newargs in teye_parse(opts, ewattrs):
+                    newattrs = copy.copy(attrs)
+                    newattrs.update(kwargs)
+                    teye_var(newargs, newattrs)
+                    teye_plot(newargs, newattrs)
             else:
                 raise UsageError('The syntax of import plot is not correct: %s'%import_args)
 
@@ -77,7 +75,6 @@ def cmd_plot(args, attrs):
                 args_pop(opts, '--book', 1)
                 newargs = teye_parse(opts, newattrs)
                 newattrs.update(kwargs)
-                teye_load(newargs, newattrs)
                 teye_var(newargs, newattrs)
                 teye_plot(newargs, newattrs)
             else:

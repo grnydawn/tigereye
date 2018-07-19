@@ -8,11 +8,21 @@ import sys
 import argparse
 import tempfile
 
+##################################
+#  Usage
+##################################
+#
+# tigereye sdfsdfsd dsfsdf sdfsd fsdf plot sdfsdf -- plot 
+#
+#
+#
+
+from .load import teye_load
 
 from .util import (read_template, funcargs_eval, teye_dict,
     teye_commands)
 
-class ArgParse(object):
+class MainArgParse(object):
 
     def __init__(self, argv):
 
@@ -46,7 +56,7 @@ class ArgParse(object):
             return None
 
         raise AttributeError(
-            "AttributeError: 'ArgParse' object has no attribute '%s'"%name)
+            "AttributeError: 'MainArgParse' object has no attribute '%s'"%name)
 
     def __contains__(self, name):
 
@@ -191,8 +201,10 @@ def _add_arguments( parser, docs):
             vargs, kwargs = funcargs_eval(teye_dict(), d)
             parser.add_argument(*vargs, **kwargs)
 
-def _handle_global_opts(args):
-    pass
+def _handle_global_opts(args, attrs):
+
+    import pdb; pdb.set_trace()
+    teye_load(args, attrs)
 
 
 def _help(args, attrs):
@@ -206,11 +218,15 @@ teye_commands['help'] = _help
 def teye_parse(argv, attrs):
     """Tigereye parser routine
 
-        '--dummy', metavar='<dd>', help='Test'
+        'data_sources', metavar='data source', nargs='+', help='input raw data.'
+        '--data-format', metavar='data format', action='append', help='define the format and load options of raw input data.'
+        '--version', action='version', version='tigereye version 0.0.0'
+
     """
 
     commands = {
         'plot': (teye_commands['plot'].__doc__.split('\n'), teye_commands['plot']),
+        #'import': (teye_commands['import'].__doc__.split('\n'), teye_commands['import']),
         'help': (teye_commands['help'].__doc__.split('\n'), teye_commands['help'])
     }
 
@@ -242,7 +258,10 @@ def teye_parse(argv, attrs):
     #        unknown_args.insert(0, parsed_args.command)
     #    else:
 
-    _handle_global_opts(global_args)
+    first_cmd = _handle_global_opts(global_args, attrs)
+
+    if first_cmd:
+        command_args.insert(0, first_cmd)
 
     if command_args:
         cmd_opts.insert(0, command_args)
@@ -250,4 +269,4 @@ def teye_parse(argv, attrs):
     # split options
     for cur_argv in cmd_opts:
 
-        yield ArgParse(cur_argv)
+        yield arg_parsers[cur_argv[0]](cur_argv[1:])

@@ -110,7 +110,7 @@ def _eval(expr, g, **kwargs):
         #g['__builtins__'] = builtins
         return eval(expr, g, kwargs)
     except NameError as err:
-        raise UsageError(str(err))
+        raise UsageError('EVAL: '+str(err))
     except TypeError as err:
         import pdb; pdb.set_trace()
 
