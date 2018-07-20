@@ -21,7 +21,8 @@ def main(argv):
 
         # handling task commands
         for task_handler in teye_task_parse(newargv):
-            task_handler.perform(gvars)
+
+            task_handler.run(gvars)
 
     except InternalError as err:
 

@@ -14,6 +14,10 @@ class Task(object):
     def __init__(self, targv):
         pass
 
+    def run(self, gvars):
+        newgvars = dict(gvars)
+        self.perform(newgvars)
+
     @abc.abstractmethod
     def perform(self, gvars):
         pass

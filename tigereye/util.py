@@ -2,10 +2,17 @@
 """tigereye utility module."""
 
 import sys
+import re
 
 from .error import UsageError
 
 PY3 = sys.version_info >= (3, 0)
+
+_re_var = re.compile(r'(?P<name>\w+)\s*=\s*(?P<others>.*)')
+_re_did = re.compile(r'(?P<name>d\d+)(?P<others>.*)')
+_re_ax_colon = re.compile(r'(?P<name>ax\d*)\s*:\s*(?P<others>.*)')
+_re_ax_equal = re.compile(r'(?P<name>ax\d*)\s*=\s*(?P<others>.*)')
+_re_name = re.compile(r'(?P<name>\w+)\s*,?\s*(?P<others>.*)')
 
 _builtins = {
 }
@@ -79,3 +86,26 @@ def parse_subargs(gvars, text, left_eval=True, right_eval=True):
             _parse(rvargs, rkwargs, right)
 
     return lvargs, lkwargs, rvargs, rkwargs
+
+def _parse_item(text, recompile):
+
+    match = recompile.match(text)
+    if match:
+        return match.group('name'), match.group('others')
+    else:
+        raise UsageError('The syntax of data definition is not correct: %s'%text)
+
+def get_axis(arg, delimiter=':'):
+
+    if delimiter == ':':
+        pattern = _re_ax_colon
+    elif delimiter == '=':
+        pattern = _re_ax_equal
+    else:
+        raise UsageError('Unknown delimiter during axis parsing:: %s, %s'%(args, delimiter))
+
+    try:
+        return _parse_item(arg, pattern)
+    except UsageError as err:
+        return 'ax', arg
+
