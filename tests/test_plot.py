@@ -36,31 +36,31 @@ def _main(argv, tempdir):
 
     assert os.path.isfile(outfile)
 
-def ttest_array_in_cmdline(tempdir):
+def test_array_in_cmdline(tempdir):
     argv = [
         "[[1,2,3], [1,4,9]]", "[4,5,6]",
-        "-v", "l1=D[1]",
-        "-v", "l2=D[0][1].log(l2**l1).sqrt(l2)",
+        "--calc", "l1=D[1]",
+        "--calc", "l2=D[0].loc[0]*D[0].loc[1]",
         "-t", "'test', fontsize=24",
-        "-x", "label='xlabel'",
-        "-x", "ticks=l1",
-        "-x", "ticklabels=['a', 'b', 'c']",
-        "-y", "label='ylabel'",
-        "-p", "plot, l1, l2",
+        "-x", "label@'xlabel'",
+        "-x", "ticks@l1",
+        "-x", "ticklabels@['a', 'b', 'c']",
+        "-y", "label@'ylabel'",
+        "-p", "plot@ l1, l2",
     ]
 
     _main(argv, tempdir)
 
-def ttest_numpy_data(tempdir):
+def test_numpy_data(tempdir):
     argv = [
-        "-v", "l1=numpy.arange(3)",
-        "-v", "l2=numpy.random~rand(3)",
+        "numpy.arange(3)",
+        "numpy.random.rand(3)",
         "-t", "'test', fontsize=24",
-        "-x", "label='xlabel'",
-        "-x", "ticklabels=['a', 'b', 'c']",
-        "-y", "label='ylabel'",
-        "-p", "scatter, l1, l2, label='s'",
-        "-p", "scatter, l2, l1, label='t'",
+        "-x", "label@'xlabel'",
+        "-x", "ticklabels@['a', 'b', 'c']",
+        "-y", "label@'ylabel'",
+        "-p", "scatter@ D[0].values, D[1].values, label='s'",
+        "-p", "scatter@ D[1].values, D[0].values, label='t'",
         "-l",
     ]
 
@@ -70,87 +70,82 @@ def test_numpy_text(tempdir):
     argv = [
         "%s"%numpy_text_data1,
         "--data-format", "csv, sep=' ', header=None",
-        "-v", "l1=D",
-        "-p", "plot, l1**2",
-        #"-d", "l1",
-        #"--noplot",
+        "-p", "plot@ D.values**2",
     ]
 
     _main(argv, tempdir)
 
-def ttest_csv_file(tempdir):
+def test_csv_file(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
-        "%s"%csv_text_data1,
-        "-v", "l1=D",
-        "-v", "l2=l1.astype(numpy.float)",
-        "-v", "l3=max(D)",
-        "-p", "plot, l2**2",
+        csv_text_data1,
+        "--calc", "l1=D.values",
+        "--calc", "l2=l1.astype(numpy.float)",
+        "--calc", "l3=max(D)",
+        "-p", "plot@ l2**(page_num+1)",
         "--data-format", "csv, delimiter=';'",
-        "--calc", "l2 = l2**2",
-        "--value", "l2",
         "--pages", "2",
-        "--book", "'%s', page_save=False"%outfile,
+        "--pdf-bind", "'%s'"%outfile,
         #"--noplot",
 
     ]
 
     _main(argv, tempdir)
 
-def ttest_axis_opt(tempdir):
+def test_axis_opt(tempdir):
     argv = [
         "[1,2,3]", "[4,5,6]",
-        "-v", "l1=D[0]",
-        "-v", "l2=D[1]",
-        "-x", "label='xlabel', fontsize=20",
-        "-x", "ticks=[1.5, 2.5]",
-        "-x", "ticklabels=['a', 'b']",
-        "-y", "label='ylabel'",
-        "-y", "ticks=[4.5, 5.5]",
-        "-y", "ticklabels=['x', 'y']",
-        "--axes", "set_title, 'new title'",
+        "--calc", "l1=D[0].values",
+        "--calc", "l2=D[1].values",
+        "-x", "label@'xlabel', fontsize=20",
+        "-x", "ticks@[1.5, 2.5]",
+        "-x", "ticklabels@['a', 'b']",
+        "-y", "label@'ylabel'",
+        "-y", "ticks@[4.5, 5.5]",
+        "-y", "ticklabels@['x', 'y']",
+        "--axes", "set_title@ 'new title'",
         "-t", "'Title'",
         "-g",
         "-l",
-        "-p", "plot, l1, l2, label='label'",
+        "-p", "plot@ l1, l2, label='label'",
     ]
 
     _main(argv, tempdir)
 
-def ttest_axis_opt(tempdir):
+def test_axis_opt(tempdir):
     argv = [
         "[1,2,3]", "[4,5,6]",
-        "-v", "l1=D[0]",
-        "-v", "l2=D[1]",
-        "--ax", "ax1=121",
-        "--ax", "ax2=122",
-        "-x", "ax1:label='xlabel', fontsize=20",
-        "-x", "ax2:ticks=[1.5, 2.5]",
-        "-x", "ax1:ticklabels=['a', 'b']",
-        "-y", "ax2:label='ylabel'",
-        "-y", "ax1:ticks=[4.5, 5.5]",
-        "-y", "ax2:ticklabels=['x', 'y']",
-        "--axes", "ax1:set_title, 'new title'",
-        "-t", "ax2:'Title'",
+        "--calc", "l1=D[0].values",
+        "--calc", "l2=D[1].values",
+        "--ax", "ax1@121",
+        "--ax", "ax2@122",
+        "-x", "ax1, label@'lxabel', fontsize=20",
+        "-x", "ax2, ticks@[1.5, 2.5]",
+        "-x", "ax1, ticklabels@['a', 'b']",
+        "-y", "ax2, label@'ylabel'",
+        "-y", "ax1, ticks@[4.5, 5.5]",
+        "-y", "ax2, ticklabels@['x', 'y']",
+        "--axes", "ax1, set_title@'new title'",
+        "-t", "ax2@'Title'",
         "-l",
-        "-p", "ax1:plot, l1, l2, label='label'",
-        "-p", "ax2:plot, l2, l1, label='label'",
+        "-p", "ax1, plot@l1, l2, label='label'",
+        "-p", "ax2, plot@l2, l1, label='label'",
     ]
 
     _main(argv, tempdir)
 
-def ttest_remote_csv(tempdir):
+def test_remote_csv(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
-        "%s"%remote_csv_data1, "['Page1', 'Page2']",
-        "-v", "l=D",
-        "-v", "l3=max(D[0])",
-        "-v", "l4=D[1]",
-        "-p", "plot, l[page_num, :]**2",
+        remote_csv_data1, "['Page1', 'Page2']",
+        "--calc", "l=D",
+        "--calc", "l3=D[0].values",
+        "--calc", "l4=D[1]",
+        "-p", "plot@ l[0].values[page_num, :]**2",
         "-t", "l4[page_num]",
-        "--data-format", "D:numpytext, delimiter=','",
+        "--data-format", "0@csv, delimiter=','",
         "--pages", "2",
-        "--book", "'%s'"%outfile,
+        "--pdf-bind", "'%s'"%outfile,
         #"--noplot",
     ]
 
@@ -167,20 +162,20 @@ def ttest_template1(tempdir):
 
 def ttest_figure_text(tempdir):
     argv = [
-        "--figure", "text, 0.5, 0.5, 'Hello World!'",
+        "--figure", "text@ 0.5, 0.5, 'Hello World!'",
     ]
 
     _main(argv, tempdir)
 
 def ttest_3D_line(tempdir):
     argv = [
-        "--ax", "ax= projection='3d'",
+        "--ax", "ax@ projection='3d'",
         "-v", "theta=numpy.linspace(-4 * numpy.pi, 4 * numpy.pi, 100)",
         "-v", "z=numpy.linspace(-2, 2, 100)",
         "-v", "r=z**2 + 1",
         "-v", "x=r * numpy.sin(theta)",
         "-v", "y=r * numpy.cos(theta)",
-        "-p", "ax: plot, x, y, z, label='parametric curve'",
+        "-p", "ax@ plot, x, y, z, label='parametric curve'",
         "-l",
     ]
 

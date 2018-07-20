@@ -2,19 +2,14 @@
 """tigereye utility module."""
 
 import sys
-import re
+import string
 
 from .error import UsageError
 
 PY3 = sys.version_info >= (3, 0)
 
-_re_var = re.compile(r'(?P<name>\w+)\s*=\s*(?P<others>.*)')
-_re_did = re.compile(r'(?P<name>d\d+)(?P<others>.*)')
-_re_ax_colon = re.compile(r'(?P<name>ax\d*)\s*:\s*(?P<others>.*)')
-_re_ax_equal = re.compile(r'(?P<name>ax\d*)\s*=\s*(?P<others>.*)')
-_re_name = re.compile(r'(?P<name>\w+)\s*,?\s*(?P<others>.*)')
-
 _builtins = {
+    "max":      max
 }
 
 class teye_globals(dict):
@@ -22,6 +17,8 @@ class teye_globals(dict):
     def __init__(self, *vargs, **kwargs):
         super(teye_globals, self).__init__(*vargs, **kwargs)
         self['__builtins__'] = _builtins
+        for C in string.ascii_uppercase[:26]:
+            self[C] = None
 
     def __setitem__(self, key, item):
         if key in globals()['__builtins__']:
@@ -48,20 +45,59 @@ def teval(expr, g, **kwargs):
 def funcargs_eval(gvars, args_str):
 
     def _parse(*args, **kw_str):
-        return args, kw_str
+        return list(args), kw_str
 
     return teval('_p(%s)'%args_str, gvars, _p=_parse)
 
 
 def parse_subargs(gvars, text, left_eval=True, right_eval=True):
 
+    def _unstrmap(text, strmap):
+
+        for k, v in strmap.items():
+            text = text.replace(k, v)
+
+        return text
+
+    def _strmap(text):
+        strmap = {}
+
+        quote = None
+        out = []
+        buf = []
+        for ch in text:
+            if ch=='"' or ch=="'":
+                if quote:
+                    if quote==ch:
+                        strid = "tigereyestrmap%d"%len(strmap)
+                        out.append(strid)
+                        strmap[strid] = "".join(buf)
+                        out.append(quote)
+
+                        buf = []
+                        quote = None
+                    else:
+                        buf.append(ch)
+                else:
+                    quote = ch
+                    out.append(quote)
+            elif quote:
+                buf.append(ch)
+            else:
+                out.append(ch)
+
+        return "".join(out), strmap
+
     def _parse(lv, lk, text):
-        for item in [i.strip() for i in text.split(',')]:
+
+        newtext, strmap = _strmap(text)
+
+        for item in [i.strip() for i in newtext.split(',')]:
             if '=' in item:
                 new, old = [i.strip() for i in item.split('=')]
-                lk[new] = old
+                lk[new] = _unstrmap(old, strmap)
             else:
-                lv.append(item)
+                lv.append(_unstrmap(item, strmap))
 
     tsplit = text.split('@')
     if len(tsplit) == 2:
@@ -87,25 +123,25 @@ def parse_subargs(gvars, text, left_eval=True, right_eval=True):
 
     return lvargs, lkwargs, rvargs, rkwargs
 
-def _parse_item(text, recompile):
-
-    match = recompile.match(text)
-    if match:
-        return match.group('name'), match.group('others')
-    else:
-        raise UsageError('The syntax of data definition is not correct: %s'%text)
-
-def get_axis(arg, delimiter=':'):
-
-    if delimiter == ':':
-        pattern = _re_ax_colon
-    elif delimiter == '=':
-        pattern = _re_ax_equal
-    else:
-        raise UsageError('Unknown delimiter during axis parsing:: %s, %s'%(args, delimiter))
-
-    try:
-        return _parse_item(arg, pattern)
-    except UsageError as err:
-        return 'ax', arg
-
+#def _parse_item(text, recompile):
+#
+#    match = recompile.match(text)
+#    if match:
+#        return match.group('name'), match.group('others')
+#    else:
+#        raise UsageError('The syntax of data definition is not correct: %s'%text)
+#
+#def get_axis(arg, delimiter=':'):
+#
+#    if delimiter == ':':
+#        pattern = _re_ax_colon
+#    elif delimiter == '=':
+#        pattern = _re_ax_equal
+#    else:
+#        raise UsageError('Unknown delimiter during axis parsing:: %s, %s'%(args, delimiter))
+#
+#    try:
+#        return _parse_item(arg, pattern)
+#    except UsageError as err:
+#        return 'ax', arg
+#

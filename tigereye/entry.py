@@ -3,11 +3,12 @@
 
 import argparse
 
-from .util import error_exit
+from .util import error_exit, parse_subargs
 
 try:
     import numpy
     import matplotlib
+    import matplotlib.pyplot
     import pandas
 except ImportError as err:
     error_exit(err)
@@ -20,8 +21,12 @@ default_task = 'plot'
 def handle_global_options(gargs, gvars):
 
     if gargs.pdf_bind:
+
+        lvargs, lkwargs, rvargs, rkwargs = \
+            parse_subargs(gvars, gargs.pdf_bind)
+
         from matplotlib.backends.backend_pdf import PdfPages
-        attrs['B'] =  teval('_p(%s)'%gargs.pdf_bind, gvars, _p=PdfPages)
+        gvars["B"] = PdfPages(*lvargs, **lkwargs)
 
 def teye_entry_task(argv, gvars):
 
@@ -57,10 +62,13 @@ def teye_entry_task(argv, gvars):
     elif gargs.data:
         task_argv.append(default_task)
 
+    task_argv.extend(command_argv)
+
     # import numpy, pandas, and matplotlib
     gvars['numpy'] = gvars['np'] = numpy
     gvars['pandas'] = gvars['pd'] = pandas
     gvars['matplotlib'] = gvars['mpl'] = matplotlib
+    gvars['pyplot'] = gvars['plt'] = matplotlib.pyplot
 
     # load inputs
     teye_data_load(gargs, gvars)

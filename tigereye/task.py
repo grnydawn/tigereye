@@ -16,7 +16,9 @@ class Task(object):
 
     def run(self, gvars):
         newgvars = dict(gvars)
-        self.perform(newgvars)
+        out = self.perform(newgvars)
+        if isinstance(out, dict):
+            gvars.update(out)
 
     @abc.abstractmethod
     def perform(self, gvars):

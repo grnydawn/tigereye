@@ -3,15 +3,18 @@
 
 import os
 import filetype
+import tempfile
 
-from .util import PY3, error_exit, teval, parse_subargs
+from .error import UsageError
+from .util import PY3, error_exit, teval, parse_subargs, funcargs_eval
 
 try:
     if PY3:
         from urllib.request import urlopen
         from urllib.parse import urlparse
+        from urllib.error import HTTPError, URLError
     else:
-        from urllib2 import urlopen
+        from urllib2 import urlopen, HTTPError, URLError
         from urlparse import urlparse
     urllib_imported = True
 except ImportError as e:
@@ -61,15 +64,19 @@ def _read_data(data_format, idx, target, gvars):
 
     # user-specified formats
     for fmt in data_format:
-        poscomma = fmt.find(",")
-        if poscomma:
-            lvargs, lkwargs, rvargs, rkwargs = \
-                parse_subargs({}, fmt[poscomma+1:])
-            if not rvargs or idx in rvargs:
-                reader = getattr(gvars["pd"], "read_"+fmt[:poscomma].strip())
-                return reader(target, **lkwargs)
+        lvargs, lkwargs, rvargs, rkwargs = \
+            parse_subargs({}, fmt, left_eval=False, right_eval=False)
+        if rvargs or rkwargs:
+            if not lvargs or str(idx) in lvargs:
+                reader = getattr(gvars["pd"], "read_"+rvargs[0].strip())
+                attrs = [k+"="+v for k, v in rkwargs.items()]
+                vargs, kwargs = funcargs_eval(gvars, ",".join(attrs))
+                return reader(target, **kwargs)
         else:
-            raise UsageError("Wrong data format option: %s"%fmt)
+            reader = getattr(gvars["pd"], "read_"+lvargs[0].strip())
+            attrs = [k+"="+v for k, v in lkwargs.items()]
+            vargs, kwargs = funcargs_eval(gvars, ",".join(attrs))
+            return reader(target, **kwargs)
 
 def teye_data_load(gargs, gvars):
 
@@ -91,7 +98,10 @@ def teye_data_load(gargs, gvars):
                 else:
                     rdata = f.read()
                 f.close()
-                data_obj = _read_data(gargs.data_format, idx, rdata, gvars)
+                t = tempfile.NamedTemporaryFile(delete=False)
+                t.write(rdata)
+                t.close()
+                data_obj = _read_data(gargs.data_format, idx, t.name, gvars)
                 if data_obj is None:
                     data_obj = _guessread_data(rdata)
                 if data_obj is not None:
@@ -103,28 +113,42 @@ def teye_data_load(gargs, gvars):
         elif item.startswith("pandas.") or item.startswith("pd."):
             data_objs.append(teval(item, gvars))
         elif item.startswith("numpy.") or item.startswith("np."):
-            pass
-            # from numpy to pandas
-            #npdata = teval(item, gvars))
-            # convert to pandas data
-            #data_objs.append(pddata)
-            # pandas.Series(data=None, index=None, dtype=None, name=None, copy=False, fastpath=False)
-            # pandas.DataFrame(data=None, index=None, columns=None, dtype=None, copy=False)
-            # pandas.Panel(data=None, items=None, major_axis=None, minor_axis=None, copy=False, dtype=None)
-            # pandas.Panel4D(data=None, labels=None, items=None, major_axis=None, minor_axis=None, copy=False, dtype=None)
-            
+            npdata = teval(item, gvars)
+            dim = len(npdata.shape)
+            if dim == 1:
+                data_objs.append(gvars["pd"].Series(npdata))
+            elif dim == 2:
+                data_objs.append(gvars["pd"].DataFrame(npdata))
+            elif dim == 3:
+                data_objs.append(gvars["pd"].Panel(npdata))
+            elif dim == 4:
+                data_objs.append(gvars["pd"].Panel4D(npdata))
+            else:
+                UsageError("data dimension should be between 1 and 4")
         else:
-            # from python data to numpy => asarray
-            # from numpy to pandas
             data = teval(item, gvars)
-            if isinstance(data) in (list, tuple):
+            if isinstance(data, (list, tuple)):
                 npdata = teval("np.asarray(%s)"%item, gvars)
                 dim = len(npdata.shape)
-                import pdb; pdb.set_trace()
-            elif isinstance(data) == dict:
+                if dim == 1:
+                    data_objs.append(gvars["pd"].Series(npdata))
+                elif dim == 2:
+                    data_objs.append(gvars["pd"].DataFrame(npdata))
+                elif dim == 3:
+                    data_objs.append(gvars["pd"].Panel(npdata))
+                elif dim == 4:
+                    data_objs.append(gvars["pd"].Panel4D(npdata))
+                else:
+                    UsageError("data dimension should be between 1 and 4")
+            elif isinstance(data, dict):
                 import pdb; pdb.set_trace()
             else:
                 raise UserError("Unknown input data: %s"%item)
 
 
-    gvars['D'] = data_objs
+    if len(data_objs) == 0:
+        gvars['D'] = None
+    elif len(data_objs) == 1:
+        gvars['D'] = data_objs[0]
+    else:
+        gvars['D'] = data_objs

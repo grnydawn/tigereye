@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 "tigereye plot core task module."
 
+import os
 import argparse
 
 from ..task import Task
-from ..util import funcargs_eval, get_axis
+from ..error import UsageError
+from ..util import funcargs_eval, parse_subargs, error_exit
 
 class plot_task(Task):
 
@@ -37,11 +39,9 @@ class plot_task(Task):
 
     def perform(self, gvars):
 
-        gvars['pyplot'] = gvars['plt'] = gvars['mpl'].pyplot
-
         # pages setting
         if self.targs.pages:
-            vargs, kwargs = funcargs_eval(args.pages, gvars)
+            vargs, kwargs = funcargs_eval(gvars, self.targs.pages)
 
             if vargs:
                 gvars['num_pages'] = vargs[-1]
@@ -53,6 +53,11 @@ class plot_task(Task):
         else:
             gvars['num_pages'] = 1
 
+        if self.targs.calc:
+            for calc in self.targs.calc:
+                vargs, kwargs = funcargs_eval(gvars, calc)
+                gvars.update(kwargs)
+
         # page iteration
         for idx in range(gvars['num_pages']):
 
@@ -60,37 +65,267 @@ class plot_task(Task):
 
             if self.targs.page_calc:
                 for page_calc in self.targs.page_calc:
-                    vargs, kwargs = funcargs_eval(page_calc, gvars)
+                    vargs, kwargs = funcargs_eval(gvars, page_calc)
                     gvars.update(kwargs)
 
             # figure setting
-            if args.f:
-                gvars['figure'] = teval('pyplot.figure(%s)'%args.f, gvars)
+            if self.targs.f:
+                gvars['figure'] = teval('pyplot.figure(%s)'%self.targs.f, gvars)
             else:
                 gvars['figure'] = gvars['pyplot'].figure()
 
             # plot axis
             if self.targs.ax:
                 for ax_arg in self.targs.ax:
-                    axname, others = get_axis(ax_arg, delimiter='=')
-                    if axname:
-                        vargs, kwargs = funcargs_eval(attrs, others)
-                        if 'projection' in kwargs and kwargs['projection'] == '3d':
+                    lvargs, lkwargs, rvargs, rkwargs = \
+                        parse_subargs(gvars, ax_arg, left_eval=False)
+                    for axname in lvargs:
+                        if 'projection' in rkwargs and kwargs['projection'] == '3d':
                              from mpl_toolkits.mplot3d import Axes3D
-                             attrs['Axes3D'] = Axes3D
-                        if len(vargs) == 0 or not isinstance(vargs[0], int):
-                            attrs[axname] = _eval('figure.add_subplot(111, %s)'%others, attrs)
+                             gvars['Axes3D'] = Axes3D
+                        if rvargs:
+                            gvars[axname] = gvars['figure'].add_subplot(rvargs[0], **rkwargs) 
                         else:
-                            attrs[axname] = _eval('figure.add_subplot(%s)'%others, attrs)
+                            gvars[axname] = gvars['figure'].add_subplot(111, **rkwargs) 
+
+            # page names
+            if 'page_names' in gvars:
+                page_names = gvars['page_names']
+                if callable(page_names):
+                    gvars['page_name'] = page_names(gvars['page_num'])
+                else:
+                    gvars['page_name'] = page_names[gvars['page_num']]
+            else:
+                gvars['page_name'] = 'page%d'%gvars['page_num']
+
+            # execute figure functions
+            if self.targs.figure:
+                for fig_arg in self.targs.figure:
+                    lvargs, lkwargs, rvargs, rkwargs = \
+                        parse_subargs(gvars, fig_arg, left_eval=False)
+
+                    for figfunc in lvargs:
+                        getattr(gvars['figure'], figfunc)(*rvargs, **rkwargs)
+
+            if self.targs.pandas:
+                pandas_args = self.targs.pandas.split("@")
+                if len(pandas_args) == 1:
+                    gvars["ax"] = teval(gvars, pandas_args[0])
+                elif len(pandas_args) == 2:
+                    gvars[pandas_args[0].strip()] = teval(gvars, pandas_args[1])
+                else:
+                    raise UsageError("pandas option has wrong syntax on using '@': %s"%self.targs.pandas)
+                
+            elif not self.targs.ax:
+                gvars['ax'] = gvars['figure'].add_subplot(111)
+
+            # plotting
+            plots = []
+            #import pdb; pdb.set_trace()
+            if self.targs.plot:
+                for plot_arg in self.targs.plot:
+                    lvargs, lkwargs, rvargs, rkwargs = \
+                        parse_subargs(gvars, plot_arg, left_eval=False)
+
+                    ##if not lvargs or not isinstance(gvars[lvargs[0]], gvars['mpl'].axes.Axes):
+
+                    if len(lvargs) == 1:
+                        ax = "ax"
+                        funcname = lvargs[0]
+                    elif len(lvargs) == 2:
+                        ax = lvargs[0]
+                        funcname = lvargs[1]
                     else:
-                        raise UsageError('Wrong axis option: %s'%ax_arg)
-            elif not args.import_plot:
-                attrs['ax'] = attrs['figure'].add_subplot(111)
+                        UsageError("Following option needs one or two items at the left of @: %s"%xaxis_arg)
+
+                    plot_handle = getattr(gvars[ax], funcname)(*rvargs, **rkwargs)
+
+                    try:
+                        for p in plot_handle:
+                            plots.append(p)
+                    except TypeError:
+                        plots.append(plot_handle)
+
+                    if funcname == 'pie':
+                        gvars[ax].axis('equal')
+
+            if 'plots' in gvars:
+                gvars['plots'].extend(plots)
+            else:
+                gvars['plots'] = plots
+
+            # title setting
+            if self.targs.title:
+                for title_arg in self.targs.title:
+                    lvargs, lkwargs, rvargs, rkwargs = \
+                        parse_subargs(gvars, title_arg)
+
+                    if rvargs or rkwargs:
+                        for ax in lvargs:
+                            ax.set_title(*rvargs, **rkwargs)
+                    elif lvargs or lkwargs:
+                        gvars["ax"].set_title(*lvargs, **lkwargs)
+                    else:
+                        gvars["ax"].set_title()
+
+            # x-axis setting
+            if self.targs.xaxis:
+                for xaxis_arg in self.targs.xaxis:
+
+                    lvargs, lkwargs, rvargs, rkwargs = \
+                        parse_subargs(gvars, xaxis_arg, left_eval=False)
+
+                    if len(lvargs) == 1:
+                        ax = "ax"
+                        funcname = lvargs[0]
+                    elif len(lvargs) == 2:
+                        ax = lvargs[0]
+                        funcname = lvargs[1]
+                    else:
+                        UsageError("Following option needs one or two items at the left of @: %s"%xaxis_arg)
+
+                    set_xfuncs =  dict((x, getattr(gvars[ax], x)) for x in dir(gvars[ax]) if x.startswith('set_x'))
+
+                    func = set_xfuncs.get("set_x"+funcname, None)
+                    if func: 
+                        func(*rvargs, **rkwargs)
 
 
-        import pdb; pdb.set_trace()
+            # y-axis setting
+            if self.targs.yaxis:
+                for yaxis_arg in self.targs.yaxis:
 
-        # figure
+                    lvargs, lkwargs, rvargs, rkwargs = \
+                        parse_subargs(gvars, yaxis_arg, left_eval=False)
+
+                    if len(lvargs) == 1:
+                        ax = "ax"
+                        funcname = lvargs[0]
+                    elif len(lvargs) == 2:
+                        ax = lvargs[0]
+                        funcname = lvargs[1]
+                    else:
+                        UsageError("Following option needs one or two items at the left of @: %s"%yaxis_arg)
+
+                    set_yfuncs =  dict((y, getattr(gvars[ax], y)) for y in dir(gvars[ax]) if y.startswith('set_y'))
+
+                    func = set_yfuncs.get("set_y"+funcname, None)
+                    if func: 
+                        func(*rvargs, **rkwargs)
+
+            # z-axis setting
+            if self.targs.zaxis:
+                for zaxis_arg in self.targs.zaxis:
+
+                    lvargs, lkwargs, rvargs, rkwargs = \
+                        parse_subargs(gvars, zaxis_arg, left_eval=False)
+
+                    if len(lvargs) == 1:
+                        ax = "ax"
+                        funcname = lvargs[0]
+                    elif len(lvargs) == 2:
+                        ax = lvargs[0]
+                        funcname = lvargs[1]
+                    else:
+                        UsageError("Following option needs one or two items at the left of @: %s"%yaxis_arg)
+
+                    set_zfuncs =  dict((z, getattr(gvars[ax], z)) for z in dir(gvars[ax]) if z.startswith('set_z'))
+
+                    func = set_zfuncs.get("set_z"+funcname, None)
+                    if func: 
+                        func(*rvargs, **rkwargs)
+
+            # grid setting
+            if self.targs.g:
+                for key, value in gvars.items():
+                    if isinstance(value, gvars['mpl'].axes.Axes):
+                        value.grid()
+
+            if self.targs.grid:
+                for grid_arg in self.targs.grid:
+
+                    lvargs, lkwargs, rvargs, rkwargs = \
+                        parse_subargs(gvars, grid_arg)
+
+                    if rvargs or rkwargs:
+                        for ax in lvargs:
+                            ax.grid(*rvargs, **rkwargs)
+                    elif lvargs or lkwargs:
+                        gvars["ax"].grid(*lvargs, **lkwargs)
+                    else:
+                        gvars["ax"].grid()
+
+            # legend setting
+            if self.targs.l:
+                for key, value in gvars.items():
+                    if isinstance(value, gvars['mpl'].axes.Axes):
+                        value.legend()
+
+            if self.targs.legend:
+                for legend_arg in self.targs.legend:
+
+                    lvargs, lkwargs, rvargs, rkwargs = \
+                        parse_subargs(gvars, legend_arg)
+
+                    if rvargs or rkwargs:
+                        for ax in lvargs:
+                            ax.legend(*rvargs, **rkwargs)
+                    elif lvargs or lkwargs:
+                        gvars["ax"].legend(*lvargs, **lkwargs)
+                    else:
+                        gvars["ax"].legend()
 
 
-        # multi-pages
+            # execute axes functions
+            if self.targs.axes:
+                for axes_arg in self.targs.axes:
+
+                    lvargs, lkwargs, rvargs, rkwargs = \
+                        parse_subargs(gvars, axes_arg, left_eval=False)
+
+                    if len(lvargs) == 1:
+                        ax = "ax"
+                        funcname = lvargs[0]
+                    elif len(lvargs) == 2:
+                        ax = lvargs[0]
+                        funcname = lvargs[1]
+                    else:
+                        UsageError("Following option needs one or two items at the left of @: %s"%yaxis_arg)
+
+                    getattr(gvars[ax], funcname)(*rvargs, **rkwargs)
+
+            elif not gvars['plots']:
+                if gvars["D"] is not None:
+                    if isinstance(gvars["D"], list):
+                        for data_obj in gvars['D']:
+                            data_obj.plot()
+                    else:
+                        gvars["D"].plot()
+                elif not self.targs.figure:
+                    error_exit("There is no data to plot.")
+
+            # saving an image file
+            if self.targs.save:
+                for save_arg in self.targs.save:
+
+                    lvargs, lkwargs, rvargs, rkwargs = \
+                        parse_subargs(gvars, save_arg)
+
+                    name = lvargs.pop(0)
+
+                    if gvars['num_pages'] > 1:
+                        root, ext = os.path.splitext(name)
+                        name = '%s-%d%s'%(root, gvars['page_num'], ext)
+
+                    gvars["figure"].savefig(name, *lvargs, **lkwargs)
+
+            if gvars["B"]:
+                gvars["B"].savefig(figure=gvars["figure"])
+
+            # displyaing an image on screen
+            if not self.targs.noshow:
+                gvars['pyplot'].show()
+
+            gvars["figure"].clear()
+            gvars["pyplot"].close(gvars["figure"])
+            del gvars['figure']
