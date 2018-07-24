@@ -15,13 +15,13 @@ numpy_text_data1 = "%s/data/numpy_text_data1.csv"%curdir
 csv_text_data1 = "%s/data/csv_text_data1.csv"%curdir
 remote_csv_data1 = "https://raw.githubusercontent.com/grnydawn/tigereye/master/data/simple.csv"
 local_function1 = "%s/function/sample1.py"%curdir
-template_sampel1 = "%s/templates/sample1.tgr"%curdir
+template_sample1 = "%s/templates/sample1.tgr"%curdir
 
 @pytest.fixture(scope="session")
 def tempdir(tmpdir_factory):
     return tmpdir_factory.getbasetemp()
 
-#def ttest_main():
+#def test_main():
 #    assert main(["[1,2,3]"]) == 0
 
 def _main(argv, tempdir):
@@ -151,120 +151,66 @@ def test_remote_csv(tempdir):
 
     _main(argv, tempdir)
 
-def ttest_template1(tempdir):
+def test_template1(tempdir):
     argv = [
-        "-i", "%s"%template_sampel1,
+        "numpy.linspace(0, 2*numpy.pi)",
+        "numpy.sin(D[0].values)",
+        "-i", "%s?name=sinplot@X=D[0].values, Y=D[1].values"%template_sample1,
         "-t", "'My Plot'",
     ]
 
+        #"-i", "%s?name=sinplot@X=D[0].values, Y=D[1].values"%template_sample1,
     _main(argv, tempdir)
 
 
-def ttest_figure_text(tempdir):
+def test_figure_text(tempdir):
     argv = [
-        "--figure", "text@ 0.5, 0.5, 'Hello World!'",
+        "[0.5, 0.5]",
+        "--figure", "text@ D[0], D[1], 'Hello World!'",
+        #"--figure", "text@ 0.5, 0.5, 'Hello World!'",
     ]
 
     _main(argv, tempdir)
 
-def ttest_3D_line(tempdir):
+def test_3D_line(tempdir):
     argv = [
+        "numpy.linspace(-4 * numpy.pi, 4 * numpy.pi, 100)",
+        "numpy.linspace(-2, 2, 100)",
+        "D[1]**2 + 1",
+        "D[2] * numpy.sin(D[0])",
+        "D[2] * numpy.cos(D[0])",
         "--ax", "ax@ projection='3d'",
-        "-v", "theta=numpy.linspace(-4 * numpy.pi, 4 * numpy.pi, 100)",
-        "-v", "z=numpy.linspace(-2, 2, 100)",
-        "-v", "r=z**2 + 1",
-        "-v", "x=r * numpy.sin(theta)",
-        "-v", "y=r * numpy.cos(theta)",
-        "-p", "ax@ plot, x, y, z, label='parametric curve'",
+        "-p", "ax, plot@D[3], D[4], D[2], label='parametric curve'",
         "-l",
     ]
 
     _main(argv, tempdir)
 
-def ttest_page_calc(tempdir):
+def test_page_calc(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
-        "-v", "i=numpy.linspace(0, 1)",
-        "-p", "plot, i, j",
-        "--page-calc", "j=i*10+page_num",
+        "numpy.linspace(0, 1)",
+        "-p", "plot@D.values, j",
+        "--page-calc", "j=D.values*10+page_num",
         "-t", "'Page-%d'%page_num",
         "--pages", "2",
-        "--book", "'%s', page_save=True"%outfile,
-    ]
-
-    _main(argv, tempdir)
-
-def ttest_import_data(tempdir):
-    outfile = '%s/test.pdf'%tempdir
-    argv = [
-        "--import-data", "x:varx, y:vary = '%s'"%template_sampel1,
-        "-p", "plot, x, y, label='line1'"
+        "--pdf-bind", "'%s'"%outfile,
     ]
 
     _main(argv, tempdir)
 
 
-def ttest_import_plot(tempdir):
+def test_pdf_bind(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
-        "-v", "x=numpy.linspace(0, 2*numpy.pi)",
-        "-v", "y=numpy.sin(x)",
-        "--import-plot", "axlocal:ax = 212, '%s', varx=x, vary=y"%template_sampel1
-    ]
-
-    _main(argv, tempdir)
-
-def ttest_import_frontpage(tempdir):
-    outfile = '%s/test.pdf'%tempdir
-    argv = [
-        "-v", "x=numpy.linspace(0, 2*numpy.pi)",
-        "-v", "y=numpy.cos(x)",
-        "--front-page", "'%s'"%template_sampel1,
-        "-p", "plot, x, y",
-        "--book", "'%s', page_save=False"%outfile,
-    ]
-
-    _main(argv, tempdir)
-
-def ttest_import_backpage(tempdir):
-    outfile = '%s/test.pdf'%tempdir
-    argv = [
-        "-v", "x=numpy.linspace(0, 2*numpy.pi)",
-        "-v", "y=numpy.cos(x)",
-        "--front-page", "'%s'"%template_sampel1,
-        "--back-page", "'%s'"%template_sampel1,
-        "-p", "plot, x, y",
-        "--book", "'%s', page_save=False"%outfile,
-    ]
-
-    _main(argv, tempdir)
-
-def ttest_import_function(tempdir):
-    outfile = '%s/test.pdf'%tempdir
-    argv = [
-        "--import-function", "f2c, conv:c2f ='%s'"%local_function1,
-        "-v", "x=numpy.arange(10)",
-        "-v", "y1=[f2c(f) for f in x]",
-        "-v", "y2=[conv(c) for c in x]",
-        "-p", "plot, x, y1, label='f2c'",
-        "-p", "plot, x, y2, label='c2f'",
-        "-l",
-    ]
-
-    _main(argv, tempdir)
-
-def ttest_import_function(tempdir):
-    outfile = '%s/test.pdf'%tempdir
-    argv = [
-        "tests/data/wetdepa.slope.csv",
-        "--data-format", "csv, delimiter=';'",
-        "-v", "hwcnames = numpy.unique(D[:,2])",
-        "--book", "'%s'"%outfile,
-        "--pages", "3",
-        "--page-calc", "X=numpy.compress(D[:,2]==hwcnames[page_num], D[:,3].astype(float))",
-        "--page-calc", "Y=numpy.compress(D[:,2]==hwcnames[page_num], D[:,4].astype(float))",
-        "-t", "hwcnames[page_num]",
-        "-p", "plot, X, Y",
+        "numpy.linspace(0, 1)",
+        "--pdf-bind", "'%s'"%outfile,
+        "-p", "plot@D.values, j",
+        "--page-calc", "j=D.values*10+page_num",
+        "-t", "'Page-%d'%page_num",
+        "--pages", "2",
+        "->", "plot",
+        "-i", "%s?name=sinplot@X=D.values, Y=numpy.linspace(1,2)"%template_sample1,
     ]
 
     _main(argv, tempdir)

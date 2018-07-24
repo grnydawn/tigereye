@@ -22,6 +22,8 @@ class plot_task(Task):
         parser.add_argument('-z', '--zaxis', metavar='zaxis', action='append', help='axes function wrapper for z axis settings.')
         parser.add_argument('-g', action='store_true', help='grid for ax plotting.')
         parser.add_argument('-l', action='store_true', help='legend for ax plotting')
+        parser.add_argument('--import', metavar='import', action='append', help='import task')
+        parser.add_argument('--name', metavar='task name', help='task name')
         parser.add_argument('--pandas', metavar='pandas', action='append', help='pandas plots.')
         parser.add_argument('--calc', metavar='calc', action='append', help='python code for manipulating data.')
         parser.add_argument('--pages', metavar='pages', help='page settings.')
@@ -35,13 +37,15 @@ class plot_task(Task):
         parser.add_argument('--noplot', action='store_true', default=False, help='prevent generating plot.')
         parser.add_argument('--version', action='version', version='tigereye plotting task version 0.0.0')
 
-        self.targs = parser.parse_args(targv)
+        self.parser = parser
+        self.targs = self.parser.parse_args(targv)
 
     def perform(self, gvars):
 
         # pages setting
         if self.targs.pages:
-            vargs, kwargs = funcargs_eval(gvars, self.targs.pages)
+            s = self.targs.pages.split("$")
+            vargs, kwargs = funcargs_eval(s[0], s[1:], gvars)
 
             if vargs:
                 gvars['num_pages'] = vargs[-1]
@@ -55,7 +59,8 @@ class plot_task(Task):
 
         if self.targs.calc:
             for calc in self.targs.calc:
-                vargs, kwargs = funcargs_eval(gvars, calc)
+                s = calc.split("$")
+                vargs, kwargs = funcargs_eval(s[0], s[1:], gvars)
                 gvars.update(kwargs)
 
         # page iteration
@@ -65,28 +70,32 @@ class plot_task(Task):
 
             if self.targs.page_calc:
                 for page_calc in self.targs.page_calc:
-                    vargs, kwargs = funcargs_eval(gvars, page_calc)
+                    s = page_calc.split("$")
+                    vargs, kwargs = funcargs_eval(s[0], s[1:], gvars)
                     gvars.update(kwargs)
 
             # figure setting
             if self.targs.f:
-                gvars['figure'] = teval('pyplot.figure(%s)'%self.targs.f, gvars)
+                s = self.targs.f.split("$")
+                gvars['figure'] = teval('pyplot.figure(%s)'%s[0], s[1:], gvars)
             else:
                 gvars['figure'] = gvars['pyplot'].figure()
 
             # plot axis
             if self.targs.ax:
                 for ax_arg in self.targs.ax:
+                    # split by $; apply variable mapping repeatedly
+                    s = ax_arg.split("$")
                     lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(gvars, ax_arg, left_eval=False)
+                        parse_subargs(s[0], s[1:], gvars, left_eval=False)
                     for axname in lvargs:
-                        if 'projection' in rkwargs and kwargs['projection'] == '3d':
+                        if 'projection' in rkwargs and rkwargs['projection'] == '3d':
                              from mpl_toolkits.mplot3d import Axes3D
                              gvars['Axes3D'] = Axes3D
                         if rvargs:
-                            gvars[axname] = gvars['figure'].add_subplot(rvargs[0], **rkwargs) 
+                            gvars[axname] = gvars['figure'].add_subplot(rvargs[0], **rkwargs)
                         else:
-                            gvars[axname] = gvars['figure'].add_subplot(111, **rkwargs) 
+                            gvars[axname] = gvars['figure'].add_subplot(111, **rkwargs)
 
             # page names
             if 'page_names' in gvars:
@@ -101,21 +110,23 @@ class plot_task(Task):
             # execute figure functions
             if self.targs.figure:
                 for fig_arg in self.targs.figure:
+                    s = fig_arg.split("$")
                     lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(gvars, fig_arg, left_eval=False)
+                        parse_subargs(s[0], s[1:], gvars, left_eval=False)
 
                     for figfunc in lvargs:
                         getattr(gvars['figure'], figfunc)(*rvargs, **rkwargs)
 
             if self.targs.pandas:
-                pandas_args = self.targs.pandas.split("@")
+                s = self.targs.pandas.split("$")
+                pandas_args = s[0].split("@")
                 if len(pandas_args) == 1:
-                    gvars["ax"] = teval(gvars, pandas_args[0])
+                    gvars["ax"] = teval(pandas_args[0], s[1:], gvars)
                 elif len(pandas_args) == 2:
-                    gvars[pandas_args[0].strip()] = teval(gvars, pandas_args[1])
+                    gvars[pandas_args[0].strip()] = teval(pandas_args[1], s[1:], gvars)
                 else:
                     raise UsageError("pandas option has wrong syntax on using '@': %s"%self.targs.pandas)
-                
+
             elif not self.targs.ax:
                 gvars['ax'] = gvars['figure'].add_subplot(111)
 
@@ -124,8 +135,9 @@ class plot_task(Task):
             #import pdb; pdb.set_trace()
             if self.targs.plot:
                 for plot_arg in self.targs.plot:
+                    s = plot_arg.split("$")
                     lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(gvars, plot_arg, left_eval=False)
+                        parse_subargs(s[0], s[1:], gvars, left_eval=False)
 
                     ##if not lvargs or not isinstance(gvars[lvargs[0]], gvars['mpl'].axes.Axes):
 
@@ -157,8 +169,9 @@ class plot_task(Task):
             # title setting
             if self.targs.title:
                 for title_arg in self.targs.title:
+                    s = title_arg.split("$")
                     lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(gvars, title_arg)
+                        parse_subargs(s[0], s[1:], gvars)
 
                     if rvargs or rkwargs:
                         for ax in lvargs:
@@ -171,9 +184,9 @@ class plot_task(Task):
             # x-axis setting
             if self.targs.xaxis:
                 for xaxis_arg in self.targs.xaxis:
-
+                    s = xaxis_arg.split("$")
                     lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(gvars, xaxis_arg, left_eval=False)
+                        parse_subargs(s[0], s[1:], gvars, left_eval=False)
 
                     if len(lvargs) == 1:
                         ax = "ax"
@@ -194,9 +207,9 @@ class plot_task(Task):
             # y-axis setting
             if self.targs.yaxis:
                 for yaxis_arg in self.targs.yaxis:
-
+                    s = yaxis_arg.split("$")
                     lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(gvars, yaxis_arg, left_eval=False)
+                        parse_subargs(s[0], s[1:], gvars, left_eval=False)
 
                     if len(lvargs) == 1:
                         ax = "ax"
@@ -216,9 +229,9 @@ class plot_task(Task):
             # z-axis setting
             if self.targs.zaxis:
                 for zaxis_arg in self.targs.zaxis:
-
+                    s = zaxis_arg.split("$")
                     lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(gvars, zaxis_arg, left_eval=False)
+                        parse_subargs(s[0], s[1:], gvars, left_eval=False)
 
                     if len(lvargs) == 1:
                         ax = "ax"
@@ -243,9 +256,9 @@ class plot_task(Task):
 
             if self.targs.grid:
                 for grid_arg in self.targs.grid:
-
+                    s = grid_arg.split("$")
                     lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(gvars, grid_arg)
+                        parse_subargs(s[0], s[1:], gvars)
 
                     if rvargs or rkwargs:
                         for ax in lvargs:
@@ -263,9 +276,9 @@ class plot_task(Task):
 
             if self.targs.legend:
                 for legend_arg in self.targs.legend:
-
+                    s = legend_arg.split("$")
                     lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(gvars, legend_arg)
+                        parse_subargs(s[0], s[1:], gvars)
 
                     if rvargs or rkwargs:
                         for ax in lvargs:
@@ -279,9 +292,9 @@ class plot_task(Task):
             # execute axes functions
             if self.targs.axes:
                 for axes_arg in self.targs.axes:
-
+                    s = axes_arg.split("$")
                     lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(gvars, axes_arg, left_eval=False)
+                        parse_subargs(s[0], s[1:], gvars, left_eval=False)
 
                     if len(lvargs) == 1:
                         ax = "ax"
@@ -295,21 +308,23 @@ class plot_task(Task):
                     getattr(gvars[ax], funcname)(*rvargs, **rkwargs)
 
             elif not gvars['plots']:
-                if gvars["D"] is not None:
+                if self.targs.figure:
+                    pass
+                elif gvars["D"] is not None:
                     if isinstance(gvars["D"], list):
                         for data_obj in gvars['D']:
                             data_obj.plot()
                     else:
                         gvars["D"].plot()
-                elif not self.targs.figure:
+                else:
                     error_exit("There is no data to plot.")
 
             # saving an image file
             if self.targs.save:
                 for save_arg in self.targs.save:
-
+                    s = save_arg.split("$")
                     lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(gvars, save_arg)
+                        parse_subargs(s[0], s[1:], gvars)
 
                     name = lvargs.pop(0)
 

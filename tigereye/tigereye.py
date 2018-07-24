@@ -22,17 +22,18 @@ def main(argv):
 
         # tigereye global variables
         gvars = teye_globals()
- 
+
         # handling entry command and global options
         newargv = teye_entry_task(argv, gvars)
 
         # handling task commands
-        for task_handler in teye_task_parse(newargv):
+        for tname, targv, task_cls in teye_task_parse(newargv):
 
-            task_handler.run(gvars)
+            if task_cls is not None:
+                task_cls(targv).run(gvars)
 
         _exit_task(gvars)
-            
+
     except InternalError as err:
 
         # ask for sending data

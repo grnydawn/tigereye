@@ -2,11 +2,25 @@
 """tigereye utility module."""
 
 import sys
+import os
 import string
+import tempfile
 
 from .error import UsageError
 
 PY3 = sys.version_info >= (3, 0)
+
+try:
+    if PY3:
+        from urllib.request import urlopen
+        from urllib.parse import urlparse
+        from urllib.error import HTTPError, URLError
+    else:
+        from urllib2 import urlopen, HTTPError, URLError
+        from urlparse import urlparse
+    urllib_imported = True
+except ImportError as e:
+    urllib_imported = False
 
 _builtins = {
     "max":      max
@@ -34,23 +48,32 @@ def error_exit(exc):
     print("ERROR: %s"%str(exc))
     sys.exit(-1)
 
-def teval(expr, g, **kwargs):
+def teval(expr, varmaps, g, **kwargs):
+
+    def _parse(**kw_str):
+        return kw_str
+
     try:
-        return eval(expr, g, kwargs)
+        _g = dict(g)
+
+        for vmap in varmaps:
+            _g.update(teval('_p(%s)'%vmap, [], _g, _p=_parse))
+
+        return eval(expr, _g, kwargs)
     except NameError as err:
         raise UsageError('EVAL: '+str(err))
     except TypeError as err:
         import pdb; pdb.set_trace()
 
-def funcargs_eval(gvars, args_str):
+def funcargs_eval(args_str, varmaps, gvars):
 
     def _parse(*args, **kw_str):
         return list(args), kw_str
 
-    return teval('_p(%s)'%args_str, gvars, _p=_parse)
+    return teval('_p(%s)'%args_str, varmaps, gvars, _p=_parse)
 
 
-def parse_subargs(gvars, text, left_eval=True, right_eval=True):
+def parse_subargs(text, varmaps, gvars, left_eval=True, right_eval=True):
 
     def _unstrmap(text, strmap):
 
@@ -100,48 +123,45 @@ def parse_subargs(gvars, text, left_eval=True, right_eval=True):
                 lv.append(_unstrmap(item, strmap))
 
     tsplit = text.split('@')
+
     if len(tsplit) == 2:
         left, right = tsplit
     elif len(tsplit) == 1:
         left, right = tsplit[0], None
 
     if left_eval:
-        lvargs, lkwargs = funcargs_eval(gvars, left)
+        lvargs, lkwargs = funcargs_eval(left, varmaps, gvars)
     else:
         lvargs = []
         lkwargs = {}
         _parse(lvargs, lkwargs, left)
+
 
     rvargs = []
     rkwargs = {}
 
     if right:
         if right_eval:
-            rvargs, rkwargs = funcargs_eval(gvars, right)
+            rvargs, rkwargs = funcargs_eval(right, varmaps, gvars)
         else:
-            _parse(rvargs, rkwargs, right)
+            varmaps = _parse(rvargs, rkwargs, right)
 
     return lvargs, lkwargs, rvargs, rkwargs
 
-#def _parse_item(text, recompile):
-#
-#    match = recompile.match(text)
-#    if match:
-#        return match.group('name'), match.group('others')
-#    else:
-#        raise UsageError('The syntax of data definition is not correct: %s'%text)
-#
-#def get_axis(arg, delimiter=':'):
-#
-#    if delimiter == ':':
-#        pattern = _re_ax_colon
-#    elif delimiter == '=':
-#        pattern = _re_ax_equal
-#    else:
-#        raise UsageError('Unknown delimiter during axis parsing:: %s, %s'%(args, delimiter))
-#
-#    try:
-#        return _parse_item(arg, pattern)
-#    except UsageError as err:
-#        return 'ax', arg
-#
+def get_localpath(path):
+
+    if os.path.isfile(path):
+        return path
+    elif urllib_imported and urlparse(path).netloc:
+        try:
+            f = urlopen(path)
+            rdata = f.read()
+            f.close()
+            t = tempfile.NamedTemporaryFile(delete=False)
+            t.write(rdata)
+            t.close()
+            return t.name
+        except HTTPError as e:
+            error_exit(e)
+        except URLError as e:
+            error_exit(e)
