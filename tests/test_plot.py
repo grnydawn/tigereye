@@ -16,12 +16,13 @@ csv_text_data1 = "%s/data/csv_text_data1.csv"%curdir
 remote_csv_data1 = "https://raw.githubusercontent.com/grnydawn/tigereye/master/data/simple.csv"
 local_function1 = "%s/function/sample1.py"%curdir
 template_sample1 = "%s/templates/sample1.tgr"%curdir
+folding_data1 = "%s/data/wetdepa.slope.csv"%curdir
 
 @pytest.fixture(scope="session")
 def tempdir(tmpdir_factory):
     return tmpdir_factory.getbasetemp()
 
-#def test_main():
+#def ttest_main():
 #    assert main(["[1,2,3]"]) == 0
 
 def _main(argv, tempdir):
@@ -30,13 +31,13 @@ def _main(argv, tempdir):
     if os.path.isfile(outfile):
         os.remove(outfile)
 
-    argv.extend(["-s", "'%s'"%outfile, "--noshow"])
-    #argv.extend(["-s", "'%s'"%outfile])
+    #argv.extend(["-s", "'%s'"%outfile, "--noshow"])
+    argv.extend(["-s", "'%s'"%outfile])
     main(argv)
 
     assert os.path.isfile(outfile)
 
-def test_array_in_cmdline(tempdir):
+def ttest_array_in_cmdline(tempdir):
     argv = [
         "[[1,2,3], [1,4,9]]", "[4,5,6]",
         "--calc", "l1=D[1]",
@@ -51,7 +52,7 @@ def test_array_in_cmdline(tempdir):
 
     _main(argv, tempdir)
 
-def test_numpy_data(tempdir):
+def ttest_numpy_data(tempdir):
     argv = [
         "numpy.arange(3)",
         "numpy.random.rand(3)",
@@ -66,7 +67,7 @@ def test_numpy_data(tempdir):
 
     _main(argv, tempdir)
 
-def test_numpy_text(tempdir):
+def ttest_numpy_text(tempdir):
     argv = [
         "%s"%numpy_text_data1,
         "--data-format", "csv, sep=' ', header=None",
@@ -75,7 +76,7 @@ def test_numpy_text(tempdir):
 
     _main(argv, tempdir)
 
-def test_csv_file(tempdir):
+def ttest_csv_file(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
         csv_text_data1,
@@ -92,7 +93,7 @@ def test_csv_file(tempdir):
 
     _main(argv, tempdir)
 
-def test_axis_opt(tempdir):
+def ttest_axis_opt(tempdir):
     argv = [
         "[1,2,3]", "[4,5,6]",
         "--calc", "l1=D[0].values",
@@ -112,7 +113,7 @@ def test_axis_opt(tempdir):
 
     _main(argv, tempdir)
 
-def test_axis_opt(tempdir):
+def ttest_axis_opt(tempdir):
     argv = [
         "[1,2,3]", "[4,5,6]",
         "--calc", "l1=D[0].values",
@@ -134,7 +135,7 @@ def test_axis_opt(tempdir):
 
     _main(argv, tempdir)
 
-def test_remote_csv(tempdir):
+def ttest_remote_csv(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
         remote_csv_data1, "['Page1', 'Page2']",
@@ -151,7 +152,7 @@ def test_remote_csv(tempdir):
 
     _main(argv, tempdir)
 
-def test_template1(tempdir):
+def ttest_template1(tempdir):
     argv = [
         "numpy.linspace(0, 2*numpy.pi)",
         "numpy.sin(D[0].values)",
@@ -163,7 +164,7 @@ def test_template1(tempdir):
     _main(argv, tempdir)
 
 
-def test_figure_text(tempdir):
+def ttest_figure_text(tempdir):
     argv = [
         "[0.5, 0.5]",
         "--figure", "text@ D[0], D[1], 'Hello World!'",
@@ -172,7 +173,7 @@ def test_figure_text(tempdir):
 
     _main(argv, tempdir)
 
-def test_3D_line(tempdir):
+def ttest_3D_line(tempdir):
     argv = [
         "numpy.linspace(-4 * numpy.pi, 4 * numpy.pi, 100)",
         "numpy.linspace(-2, 2, 100)",
@@ -186,7 +187,7 @@ def test_3D_line(tempdir):
 
     _main(argv, tempdir)
 
-def test_page_calc(tempdir):
+def ttest_page_calc(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
         "numpy.linspace(0, 1)",
@@ -200,7 +201,7 @@ def test_page_calc(tempdir):
     _main(argv, tempdir)
 
 
-def test_pdf_bind(tempdir):
+def ttest_pdf_bind(tempdir):
     outfile = '%s/test.pdf'%tempdir
     argv = [
         "numpy.linspace(0, 1)",
@@ -211,6 +212,24 @@ def test_pdf_bind(tempdir):
         "--pages", "2",
         "->", "plot",
         "-i", "%s?name=sinplot@X=D.values, Y=numpy.linspace(1,2)"%template_sample1,
+    ]
+
+    _main(argv, tempdir)
+
+def test_folding(tempdir):
+    outfile = '%s/test.pdf'%tempdir
+    argv = [
+        folding_data1,
+        "--data-format", "csv, delimiter=';'",
+        "--pdf-bind", "'%s'"%outfile,
+        "--data-format", "csv, delimiter=';', header=None",
+        "--calc", "hwcs=D.iloc[:,2].drop_duplicates().values",
+        "--pages", "len(hwcs)",
+        "--page-calc", "HWC=D.loc[D.iloc[:,2]==hwcs[page_num],:]",
+        "-p", "plot@HWC.iloc[:,3].values, HWC.iloc[:,4].values",
+        "-t", "hwcs[page_num]",
+        "-x", "label@'elapsed time(0: start, 1: end)'",
+        "-y", "label@'event'",
     ]
 
     _main(argv, tempdir)

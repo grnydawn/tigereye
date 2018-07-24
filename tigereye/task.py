@@ -2,8 +2,9 @@
 "tigereye task module."
 
 import abc
+import string
 
-from .error import InternalError
+from .error import InternalError, UsageError
 from .util import subclasses
 
 class Task(object):
@@ -18,7 +19,11 @@ class Task(object):
         newgvars = dict(gvars)
         out = self.perform(newgvars)
         if isinstance(out, dict):
-            gvars.update(out)
+            for k, v in out.items():
+                if k not in string.ascii_uppercase[:26]:
+                    gvars[k] = v
+                else:
+                    raise UsageError("'%s' is a reserved word."%k)
 
     @abc.abstractmethod
     def perform(self, gvars):

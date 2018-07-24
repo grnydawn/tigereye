@@ -23,7 +23,10 @@ except ImportError as e:
     urllib_imported = False
 
 _builtins = {
-    "max":      max
+    "len":      len,
+    "max":      max,
+    "min":      min,
+    "range":    range,
 }
 
 class teye_globals(dict):

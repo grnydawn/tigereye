@@ -42,6 +42,12 @@ class plot_task(Task):
 
     def perform(self, gvars):
 
+        if self.targs.calc:
+            for calc in self.targs.calc:
+                s = calc.split("$")
+                vargs, kwargs = funcargs_eval(s[0], s[1:], gvars)
+                gvars.update(kwargs)
+
         # pages setting
         if self.targs.pages:
             s = self.targs.pages.split("$")
@@ -56,12 +62,6 @@ class plot_task(Task):
                 gvars[key] = value
         else:
             gvars['num_pages'] = 1
-
-        if self.targs.calc:
-            for calc in self.targs.calc:
-                s = calc.split("$")
-                vargs, kwargs = funcargs_eval(s[0], s[1:], gvars)
-                gvars.update(kwargs)
 
         # page iteration
         for idx in range(gvars['num_pages']):
@@ -148,7 +148,7 @@ class plot_task(Task):
                         ax = lvargs[0]
                         funcname = lvargs[1]
                     else:
-                        UsageError("Following option needs one or two items at the left of @: %s"%xaxis_arg)
+                        UsageError("Following option needs one or two items at the left of @: %s"%plot_arg)
 
                     plot_handle = getattr(gvars[ax], funcname)(*rvargs, **rkwargs)
 

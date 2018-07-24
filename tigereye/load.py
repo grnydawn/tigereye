@@ -9,62 +9,40 @@ from .error import UsageError
 from .util import (teval, parse_subargs, funcargs_eval, get_localpath,
     )
 
-class TEyeType(filetype.Type):
-    pass
+def _reader_by_ext(ext, pd):
 
-class Csv(TEyeType):
-    """
-    Implements the CSV data type matcher.
-    """
-    MIME = 'text/csv'
-    EXTENSION = 'csv'
-    PANDAS = 'csv'
-
-    def __init__(self):
-        super(Csv, self).__init__(
-            mime=Csv.MIME,
-            extension=Csv.EXTENSION
-        )
-
-    def match(self, buf):
-        return (len(buf) > 2 and
-                buf[0] == 0xFF and
-                buf[1] == 0xD8 and
-                buf[2] == 0xFF)
-
-def _add_filetypes():
-    filetype.add_type(Csv())
-
-def _guessread_data(data_format, idx, target):
-    import pdb; pdb.set_trace()
-    data = None
-
-    kind = filetype.guess(target)
-    #for reader in [getattr(gvars['pd'], v) for v in dir(gvars['pd']) if v.startswith("read_")]:
-    #    try:
-    #        data = reader(target)
-    #    except Exception as err:
-    #        pass
-    #    if data is not None:
-    #        break
+    if ext in (".csv",):
+        return pd.read_csv
+    else:
+        import pdb; pdb.set_trace()
 
 def _read_data(data_format, idx, target, gvars):
 
-    # user-specified formats
-    for fmt in data_format:
-        lvargs, lkwargs, rvargs, rkwargs = \
-            parse_subargs(fmt, [], {}, left_eval=False, right_eval=False)
-        if rvargs or rkwargs:
-            if not lvargs or str(idx) in lvargs:
-                reader = getattr(gvars["pd"], "read_"+rvargs[0].strip())
-                attrs = [k+"="+v for k, v in rkwargs.items()]
+    if data_format:
+        # user-specified formats
+        for fmt in data_format:
+            lvargs, lkwargs, rvargs, rkwargs = \
+                parse_subargs(fmt, [], {}, left_eval=False, right_eval=False)
+            if rvargs or rkwargs:
+                if not lvargs or str(idx) in lvargs:
+                    reader = getattr(gvars["pd"], "read_"+rvargs[0].strip())
+                    attrs = [k+"="+v for k, v in rkwargs.items()]
+                    vargs, kwargs = funcargs_eval(",".join(attrs), [], gvars)
+                    return reader(target, **kwargs)
+            else:
+                reader = getattr(gvars["pd"], "read_"+lvargs[0].strip())
+                attrs = [k+"="+v for k, v in lkwargs.items()]
                 vargs, kwargs = funcargs_eval(",".join(attrs), [], gvars)
                 return reader(target, **kwargs)
-        else:
-            reader = getattr(gvars["pd"], "read_"+lvargs[0].strip())
-            attrs = [k+"="+v for k, v in lkwargs.items()]
-            vargs, kwargs = funcargs_eval(",".join(attrs), [], gvars)
-            return reader(target, **kwargs)
+    else:
+        readers = [getattr(gvars['pd'], v) for v in dir(gvars['pd']) if v.startswith("read_")]
+        _,ext = os.path.splitext(target)
+        readers.insert(0, _reader_by_ext(ext, gvars['pd']))
+        for reader in readers:
+            try:
+                return reader(target)
+            except Exception as err:
+                pass
 
 def teye_data_load(gargs, gvars):
 
@@ -75,8 +53,6 @@ def teye_data_load(gargs, gvars):
         local_path = get_localpath(item)
         if local_path:
             data_obj = _read_data(gargs.data_format, idx, local_path, gvars)
-            if data_obj is None:
-                data_obj = _guessread_data(item)
             if data_obj is not None:
                 data_objs.append(data_obj)
         elif item.startswith("pandas.") or item.startswith("pd."):

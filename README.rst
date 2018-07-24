@@ -10,7 +10,7 @@ tigereye
     :target: https://travis-ci.org/grnydawn/tigereye
 
 
-A reusable data-manipulation and plotting tool
+All-in-one data utility for Python users
 
 * Free software: MIT license
 * Documentation: https://grnydawn.github.io/tigereyedocs.
@@ -29,11 +29,12 @@ Installation
 Dependencies
 ============
 
-Tigereye extensively uses matplotlib_ and numpy_ Python packages. Before using tigereye, the two Python packages need to be installed. In many cases, the packages may be already available for you. You can check if the packages are available locally on your computer by running following commands. You should see three numbers similar to "2.2.2" per each commands below. If not, please visit corresponding package site and follow installation direction to install.
+Tigereye extensively uses pandas_, numpy_ and matplotlib_ Python packages. Before using tigereye, the three Python packages need to be installed. You can check if the packages are available locally on your computer by running following commands. You should see three numbers similar to "2.2.2" per each commands below. If not, please visit corresponding package site and follow installation direction to install.
 
 .. code-block:: text
 
     $ python -c "import numpy; print(numpy.__version__)"
+    $ python -c "import pandas; print(pandas.__version__)"
     $ python -c "import matplotlib; print(matplotlib.__version__)"
 
 You can install tigereye either using pip Python package manager or using source code from github repositiory. You may get a stable version from using pip and a latest version from using source code.
@@ -82,8 +83,8 @@ Labels are added into x and y axes.
 
     $ tigereye "[1,2,4]" \
         -t "'Sample Plot', fontsize=16" \
-        -x "label='X', fontsize=12" \
-        -y "label='Y', fontsize=12"
+        -x "label@'X', fontsize=12" \
+        -y "label@'Y', fontsize=12"
 
 Data is generated using numpy.
 ==============================
@@ -91,12 +92,12 @@ Data is generated using numpy.
 .. code-block:: text
 
     $ tigereye \
-        -v "varx=numpy.linspace(0, 2*numpy.pi)" \
-        -v "vary=numpy.sin(varx)" \
+        "numpy.linspace(0, 2*numpy.pi)" \
+        "numpy.sin(D[0])" \
         -t "'Sample Plot', fontsize=16" \
-        -x "label='X', fontsize=12" \
-        -y "label='Y', fontsize=12" \
-        -p "plot, varx, vary, label='line1'"
+        -x "label@'X', fontsize=12" \
+        -y "label@'Y', fontsize=12" \
+        -p "plot@ D[0].values, D[1].values, label='line1'"
 
 Plot is generated using a template .
 ====================================
@@ -175,4 +176,5 @@ Tigereye extensively uses matplotlib_ and numpy_. The packages have vastly accep
 
 .. _matplotlib: https://matplotlib.org/
 .. _numpy: http://www.numpy.org/
+.. _pandas: https://pandas.pydata.org/
 .. _tigereye: https://grnydawn.github.io/tigereyedocs
