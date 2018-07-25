@@ -324,7 +324,7 @@ class plot_task(Task):
                 for save_arg in self.targs.save:
                     s = save_arg.split("$")
                     lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(s[0], s[1:], gvars)
+                        parse_subargs('r'+s[0], s[1:], gvars)
 
                     name = lvargs.pop(0)
 

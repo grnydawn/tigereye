@@ -2,7 +2,6 @@
 "tigereye data load module."
 
 import os
-import filetype
 import tempfile
 
 from .error import UsageError

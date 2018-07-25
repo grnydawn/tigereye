@@ -31,8 +31,8 @@ def _main(argv, tempdir):
     if outfile.isfile():
         os.remove(str(outfile))
 
-    #argv.extend(["-s", "'%s'"%outfile, "--noshow"])
-    argv.extend(["-s", "r'%s'"%outfile])
+    argv.extend(["-s", "'%s'"%outfile, "--noshow"])
+    #argv.extend(["-s", "r'%s'"%outfile])
     main(argv)
 
     assert outfile.isfile()
@@ -86,7 +86,7 @@ def test_csv_file(tempdir):
         "-p", "plot@ l2**(page_num+1)",
         "--data-format", "csv, delimiter=';'",
         "--pages", "2",
-        "--pdf-bind", "r'%s'"%outfile,
+        "--pdf-bind", "'%s'"%outfile,
         #"--noplot",
 
     ]
@@ -146,7 +146,7 @@ def test_remote_csv(tempdir):
         "-t", "l4[page_num]",
         "--data-format", "0@csv, delimiter=','",
         "--pages", "2",
-        "--pdf-bind", "r'%s'"%outfile,
+        "--pdf-bind", "'%s'"%outfile,
         #"--noplot",
     ]
 
@@ -195,7 +195,7 @@ def test_page_calc(tempdir):
         "--page-calc", "j=D.values*10+page_num",
         "-t", "'Page-%d'%page_num",
         "--pages", "2",
-        "--pdf-bind", "r'%s'"%outfile,
+        "--pdf-bind", "'%s'"%outfile,
     ]
 
     _main(argv, tempdir)
@@ -205,7 +205,7 @@ def test_pdf_bind(tempdir):
     outfile = tempdir.join('test.pdf')
     argv = [
         "numpy.linspace(0, 1)",
-        "--pdf-bind", "r'%s'"%outfile,
+        "--pdf-bind", "'%s'"%outfile,
         "-p", "plot@D.values, j",
         "--page-calc", "j=D.values*10+page_num",
         "-t", "'Page-%d'%page_num",
@@ -221,7 +221,7 @@ def test_folding(tempdir):
     argv = [
         folding_data1,
         "--data-format", "csv, delimiter=';'",
-        "--pdf-bind", "r'%s'"%outfile,
+        "--pdf-bind", "'%s'"%outfile,
         "--data-format", "csv, delimiter=';', header=None",
         "--calc", "hwcs=D.iloc[:,2].drop_duplicates().values",
         "--pages", "len(hwcs)",

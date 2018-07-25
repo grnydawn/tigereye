@@ -24,7 +24,7 @@ def handle_global_options(gargs, gvars):
 
         s = gargs.pdf_bind.split("$")
         lvargs, lkwargs, rvargs, rkwargs = \
-            parse_subargs(s[0], s[1:], gvars)
+            parse_subargs('r'+s[0], s[1:], gvars)
 
         from matplotlib.backends.backend_pdf import PdfPages
         gvars["B"] = PdfPages(*lvargs, **lkwargs)
