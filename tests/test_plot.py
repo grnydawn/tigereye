@@ -11,12 +11,12 @@ from tigereye import main
 
 curdir = os.path.dirname(os.path.realpath(__file__))
 
-numpy_text_data1 = "%s/data/numpy_text_data1.csv"%curdir
-csv_text_data1 = "%s/data/csv_text_data1.csv"%curdir
+numpy_text_data1 = os.path.join(curdir, "data", "numpy_text_data1.csv")
+csv_text_data1 = os.path.join(curdir, "data", "csv_text_data1.csv")
 remote_csv_data1 = "https://raw.githubusercontent.com/grnydawn/tigereye/master/data/simple.csv"
-local_function1 = "%s/function/sample1.py"%curdir
-template_sample1 = "%s/templates/sample1.tgr"%curdir
-folding_data1 = "%s/data/wetdepa.slope.csv"%curdir
+local_function1 = os.path.join(curdir, "function", "sample1.py")
+template_sampel1 = os.path.join(curdir, "templates", "sample1.tgr")
+folding_data1 = os.path.join(curdir, "data", "wetdepa.slope.csv")
 
 @pytest.fixture(scope="session")
 def tempdir(tmpdir_factory):
@@ -27,15 +27,15 @@ def tempdir(tmpdir_factory):
 
 def _main(argv, tempdir):
 
-    outfile = '%s/test.pdf'%tempdir
-    if os.path.isfile(outfile):
+    outfile = tempdir.join('test.pdf')
+    if outfile.isfile():
         os.remove(outfile)
 
     #argv.extend(["-s", "'%s'"%outfile, "--noshow"])
-    argv.extend(["-s", "'%s'"%outfile])
+    argv.extend(["-s", "r'%s'"%outfile])
     main(argv)
 
-    assert os.path.isfile(outfile)
+    assert outfile.isfile()
 
 def ttest_array_in_cmdline(tempdir):
     argv = [
@@ -77,7 +77,7 @@ def ttest_numpy_text(tempdir):
     _main(argv, tempdir)
 
 def ttest_csv_file(tempdir):
-    outfile = '%s/test.pdf'%tempdir
+    outfile = tempdir.join('test.pdf')
     argv = [
         csv_text_data1,
         "--calc", "l1=D.values",
@@ -136,7 +136,7 @@ def ttest_axis_opt(tempdir):
     _main(argv, tempdir)
 
 def ttest_remote_csv(tempdir):
-    outfile = '%s/test.pdf'%tempdir
+    outfile = tempdir.join('test.pdf')
     argv = [
         remote_csv_data1, "['Page1', 'Page2']",
         "--calc", "l=D",
@@ -188,7 +188,7 @@ def ttest_3D_line(tempdir):
     _main(argv, tempdir)
 
 def ttest_page_calc(tempdir):
-    outfile = '%s/test.pdf'%tempdir
+    outfile = tempdir.join('test.pdf')
     argv = [
         "numpy.linspace(0, 1)",
         "-p", "plot@D.values, j",
@@ -202,7 +202,7 @@ def ttest_page_calc(tempdir):
 
 
 def ttest_pdf_bind(tempdir):
-    outfile = '%s/test.pdf'%tempdir
+    outfile = tempdir.join('test.pdf')
     argv = [
         "numpy.linspace(0, 1)",
         "--pdf-bind", "'%s'"%outfile,
@@ -217,11 +217,11 @@ def ttest_pdf_bind(tempdir):
     _main(argv, tempdir)
 
 def test_folding(tempdir):
-    outfile = '%s/test.pdf'%tempdir
+    outfile = tempdir.join('test.pdf')
     argv = [
         folding_data1,
         "--data-format", "csv, delimiter=';'",
-        "--pdf-bind", "'%s'"%outfile,
+        "--pdf-bind", "r'%s'"%outfile,
         "--data-format", "csv, delimiter=';', header=None",
         "--calc", "hwcs=D.iloc[:,2].drop_duplicates().values",
         "--pages", "len(hwcs)",

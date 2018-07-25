@@ -109,3 +109,7 @@ ENV/
 
 # temp directories
 .pytest_cache
+
+# temp files
+*.py~
+*.un~
