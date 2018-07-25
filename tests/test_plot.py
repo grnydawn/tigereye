@@ -15,21 +15,21 @@ numpy_text_data1 = os.path.join(curdir, "data", "numpy_text_data1.csv")
 csv_text_data1 = os.path.join(curdir, "data", "csv_text_data1.csv")
 remote_csv_data1 = "https://raw.githubusercontent.com/grnydawn/tigereye/master/data/simple.csv"
 local_function1 = os.path.join(curdir, "function", "sample1.py")
-template_sampel1 = os.path.join(curdir, "templates", "sample1.tgr")
+template_sample1 = os.path.join(curdir, "templates", "sample1.tgr")
 folding_data1 = os.path.join(curdir, "data", "wetdepa.slope.csv")
 
 @pytest.fixture(scope="session")
 def tempdir(tmpdir_factory):
     return tmpdir_factory.getbasetemp()
 
-#def ttest_main():
+#def test_main():
 #    assert main(["[1,2,3]"]) == 0
 
 def _main(argv, tempdir):
 
     outfile = tempdir.join('test.pdf')
     if outfile.isfile():
-        os.remove(outfile)
+        os.remove(str(outfile))
 
     #argv.extend(["-s", "'%s'"%outfile, "--noshow"])
     argv.extend(["-s", "r'%s'"%outfile])
@@ -37,7 +37,7 @@ def _main(argv, tempdir):
 
     assert outfile.isfile()
 
-def ttest_array_in_cmdline(tempdir):
+def test_array_in_cmdline(tempdir):
     argv = [
         "[[1,2,3], [1,4,9]]", "[4,5,6]",
         "--calc", "l1=D[1]",
@@ -52,7 +52,7 @@ def ttest_array_in_cmdline(tempdir):
 
     _main(argv, tempdir)
 
-def ttest_numpy_data(tempdir):
+def test_numpy_data(tempdir):
     argv = [
         "numpy.arange(3)",
         "numpy.random.rand(3)",
@@ -67,7 +67,7 @@ def ttest_numpy_data(tempdir):
 
     _main(argv, tempdir)
 
-def ttest_numpy_text(tempdir):
+def test_numpy_text(tempdir):
     argv = [
         "%s"%numpy_text_data1,
         "--data-format", "csv, sep=' ', header=None",
@@ -76,7 +76,7 @@ def ttest_numpy_text(tempdir):
 
     _main(argv, tempdir)
 
-def ttest_csv_file(tempdir):
+def test_csv_file(tempdir):
     outfile = tempdir.join('test.pdf')
     argv = [
         csv_text_data1,
@@ -86,14 +86,14 @@ def ttest_csv_file(tempdir):
         "-p", "plot@ l2**(page_num+1)",
         "--data-format", "csv, delimiter=';'",
         "--pages", "2",
-        "--pdf-bind", "'%s'"%outfile,
+        "--pdf-bind", "r'%s'"%outfile,
         #"--noplot",
 
     ]
 
     _main(argv, tempdir)
 
-def ttest_axis_opt(tempdir):
+def test_axis_opt(tempdir):
     argv = [
         "[1,2,3]", "[4,5,6]",
         "--calc", "l1=D[0].values",
@@ -113,7 +113,7 @@ def ttest_axis_opt(tempdir):
 
     _main(argv, tempdir)
 
-def ttest_axis_opt(tempdir):
+def test_axis_opt(tempdir):
     argv = [
         "[1,2,3]", "[4,5,6]",
         "--calc", "l1=D[0].values",
@@ -135,7 +135,7 @@ def ttest_axis_opt(tempdir):
 
     _main(argv, tempdir)
 
-def ttest_remote_csv(tempdir):
+def test_remote_csv(tempdir):
     outfile = tempdir.join('test.pdf')
     argv = [
         remote_csv_data1, "['Page1', 'Page2']",
@@ -146,13 +146,13 @@ def ttest_remote_csv(tempdir):
         "-t", "l4[page_num]",
         "--data-format", "0@csv, delimiter=','",
         "--pages", "2",
-        "--pdf-bind", "'%s'"%outfile,
+        "--pdf-bind", "r'%s'"%outfile,
         #"--noplot",
     ]
 
     _main(argv, tempdir)
 
-def ttest_template1(tempdir):
+def test_template1(tempdir):
     argv = [
         "numpy.linspace(0, 2*numpy.pi)",
         "numpy.sin(D[0].values)",
@@ -164,7 +164,7 @@ def ttest_template1(tempdir):
     _main(argv, tempdir)
 
 
-def ttest_figure_text(tempdir):
+def test_figure_text(tempdir):
     argv = [
         "[0.5, 0.5]",
         "--figure", "text@ D[0], D[1], 'Hello World!'",
@@ -173,7 +173,7 @@ def ttest_figure_text(tempdir):
 
     _main(argv, tempdir)
 
-def ttest_3D_line(tempdir):
+def test_3D_line(tempdir):
     argv = [
         "numpy.linspace(-4 * numpy.pi, 4 * numpy.pi, 100)",
         "numpy.linspace(-2, 2, 100)",
@@ -187,7 +187,7 @@ def ttest_3D_line(tempdir):
 
     _main(argv, tempdir)
 
-def ttest_page_calc(tempdir):
+def test_page_calc(tempdir):
     outfile = tempdir.join('test.pdf')
     argv = [
         "numpy.linspace(0, 1)",
@@ -195,17 +195,17 @@ def ttest_page_calc(tempdir):
         "--page-calc", "j=D.values*10+page_num",
         "-t", "'Page-%d'%page_num",
         "--pages", "2",
-        "--pdf-bind", "'%s'"%outfile,
+        "--pdf-bind", "r'%s'"%outfile,
     ]
 
     _main(argv, tempdir)
 
 
-def ttest_pdf_bind(tempdir):
+def test_pdf_bind(tempdir):
     outfile = tempdir.join('test.pdf')
     argv = [
         "numpy.linspace(0, 1)",
-        "--pdf-bind", "'%s'"%outfile,
+        "--pdf-bind", "r'%s'"%outfile,
         "-p", "plot@D.values, j",
         "--page-calc", "j=D.values*10+page_num",
         "-t", "'Page-%d'%page_num",
