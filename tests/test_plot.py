@@ -32,7 +32,7 @@ def _main(argv, tempdir):
         os.remove(str(outfile))
 
     argv.extend(["-s", "'%s'"%outfile, "--noshow"])
-    #argv.extend(["-s", "r'%s'"%outfile])
+    #argv.extend(["-s", "'%s'"%outfile])
     main(argv)
 
     assert outfile.isfile()
@@ -156,11 +156,10 @@ def test_template1(tempdir):
     argv = [
         "numpy.linspace(0, 2*numpy.pi)",
         "numpy.sin(D[0].values)",
-        "-i", "%s?name=sinplot@X=D[0].values, Y=D[1].values"%template_sample1,
+        "--import-task", "%s?name=sinplot@X=D[0].values, Y=D[1].values"%template_sample1,
         "-t", "'My Plot'",
     ]
 
-        #"-i", "%s?name=sinplot@X=D[0].values, Y=D[1].values"%template_sample1,
     _main(argv, tempdir)
 
 
@@ -210,8 +209,9 @@ def test_pdf_bind(tempdir):
         "--page-calc", "j=D.values*10+page_num",
         "-t", "'Page-%d'%page_num",
         "--pages", "2",
-        "->", "plot",
-        "-i", "%s?name=sinplot@X=D.values, Y=numpy.linspace(1,2)"%template_sample1,
+        "--noshow",
+        "--", "plot",
+        "--import-task", "%s?name=sinplot@X=D.values, Y=numpy.linspace(1,2)"%template_sample1,
     ]
 
     _main(argv, tempdir)
