@@ -78,7 +78,6 @@ def teye_data_load(gargs, gvars):
                 gvars["pd"].Panel)):
                 data_objs.append(data)
             elif isinstance(data, (list, tuple)):
-                s = item.split("$")
                 npdata = teval("np.asarray(%s)"%s[0], s[1:], gvars)
                 dim = len(npdata.shape)
                 if dim == 1:
@@ -87,8 +86,8 @@ def teye_data_load(gargs, gvars):
                     data_objs.append(gvars["pd"].DataFrame(npdata))
                 elif dim == 3:
                     data_objs.append(gvars["pd"].Panel(npdata))
-                elif dim == 4:
-                    data_objs.append(gvars["pd"].Panel4D(npdata))
+                #elif dim == 4:
+                #    data_objs.append(gvars["pd"].Panel4D(npdata))
                 else:
                     UsageError("data dimension should be between 1 and 4")
             elif isinstance(data, dict):
@@ -100,6 +99,7 @@ def teye_data_load(gargs, gvars):
     if len(data_objs) == 0:
         gvars['D'] = None
     elif len(data_objs) == 1:
+        # TODO: in case of stream type, yield multiple times
         gvars['D'] = data_objs[0]
     else:
         gvars['D'] = data_objs

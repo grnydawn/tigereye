@@ -42,7 +42,7 @@ def parse_global_opts(argv):
     task_argv = []
 
     for idx, arg in enumerate(argv):
-        if arg == "->":
+        if arg == "--":
             task_argv.extend(argv[idx:])
             break
         else:
@@ -56,14 +56,6 @@ def parse_global_opts(argv):
         first_task = gargs.data.pop(0)
     else:
         first_task = default_task
-        #task_argv.insert(0, first_task)
-        #task_argv.insert(1, "->")
-
-    #if task_argv:
-    #    if task_argv[0] not in tasks.keys():
-    #        task_argv.insert(0, default_task)
-    #elif gargs.data:
-    #    task_argv.append(default_task)
 
     command_argv.insert(0, first_task)
     task_argv = command_argv + task_argv
@@ -71,7 +63,6 @@ def parse_global_opts(argv):
     return gargs, task_argv
 
 def teye_entry_task(argv, gvars):
-
 
     gargs, task_argv = parse_global_opts(argv)
 
@@ -81,11 +72,11 @@ def teye_entry_task(argv, gvars):
     gvars['matplotlib'] = gvars['mpl'] = matplotlib
     gvars['pyplot'] = gvars['plt'] = matplotlib.pyplot
 
-    # load inputs
-    teye_data_load(gargs, gvars)
-
     # handling remaining global options
     handle_global_options(gargs, gvars)
 
-    # return remaining arguments
+    # load inputs
+    teye_data_load(gargs, gvars)
+
     return task_argv
+

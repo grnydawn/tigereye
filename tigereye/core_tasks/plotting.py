@@ -22,10 +22,12 @@ class plot_task(Task):
         parser.add_argument('-z', '--zaxis', metavar='zaxis', action='append', help='axes function wrapper for z axis settings.')
         parser.add_argument('-g', action='store_true', help='grid for ax plotting.')
         parser.add_argument('-l', action='store_true', help='legend for ax plotting')
-        parser.add_argument('--import', metavar='import', action='append', help='import task')
+        parser.add_argument('--import-task', metavar='task', action='append', help='import task')
+        parser.add_argument('--import-function', metavar='function', action='append', help='import function')
         parser.add_argument('--name', metavar='task name', help='task name')
-        parser.add_argument('--pandas', metavar='pandas', action='append', help='pandas plots.')
         parser.add_argument('--calc', metavar='calc', action='append', help='python code for manipulating data.')
+        parser.add_argument('--output', metavar='output', action='append', help='output variable.')
+        parser.add_argument('--pandas', metavar='pandas', action='append', help='pandas plots.')
         parser.add_argument('--pages', metavar='pages', help='page settings.')
         parser.add_argument('--page-calc', metavar='page_calc', action='append', help='python code for manipulating data within page generation.')
         parser.add_argument('--legend', metavar='legend', action='append', help='plot legend')
@@ -37,16 +39,9 @@ class plot_task(Task):
         parser.add_argument('--noplot', action='store_true', default=False, help='prevent generating plot.')
         parser.add_argument('--version', action='version', version='tigereye plotting task version 0.0.0')
 
-        self.parser = parser
-        self.targs = self.parser.parse_args(targv)
+        self.targs = parser.parse_args(targv)
 
     def perform(self, gvars):
-
-        if self.targs.calc:
-            for calc in self.targs.calc:
-                s = calc.split("$")
-                vargs, kwargs = funcargs_eval(s[0], s[1:], gvars)
-                gvars.update(kwargs)
 
         # pages setting
         if self.targs.pages:
@@ -132,7 +127,6 @@ class plot_task(Task):
 
             # plotting
             plots = []
-            #import pdb; pdb.set_trace()
             if self.targs.plot:
                 for plot_arg in self.targs.plot:
                     s = plot_arg.split("$")

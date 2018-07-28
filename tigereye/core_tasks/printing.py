@@ -6,7 +6,7 @@ import argparse
 
 from ..task import Task
 from ..error import UsageError
-from ..util import teval, funcargs_eval, parse_subargs, error_exit
+from ..util import funcargs_eval, parse_subargs
 
 class print_task(Task):
 
@@ -26,12 +26,13 @@ class print_task(Task):
         parser.add_argument('--mean', metavar='mean value', action='append', help='mean value')
         parser.add_argument('--std', metavar='std value', action='append', help='standard deviation value')
         parser.add_argument('--calc', metavar='calc', action='append', help='python code for manipulating data.')
+        parser.add_argument('--import-task', metavar='task', action='append', help='import task')
+        parser.add_argument('--import-function', metavar='function', action='append', help='import function')
         parser.add_argument('--output', metavar='output', action='append', help='output variable.')
         parser.add_argument('--name', metavar='task name', help='task name')
         parser.add_argument('--version', action='version', version='tigereye printing task version 0.0.0')
 
-        self.parser = parser
-        self.targs = self.parser.parse_args(targv)
+        self.targs = parser.parse_args(targv)
 
     def perform(self, gvars):
 
@@ -40,13 +41,6 @@ class print_task(Task):
         def _print(obj):
             print("\n"+str(obj))
             printed.add(True)
-
-        # TODO: check A-Z reserved name
-        if self.targs.calc:
-            for calc in self.targs.calc:
-                s = calc.split("$")
-                vargs, kwargs = funcargs_eval(s[0], s[1:], gvars)
-                gvars.update(kwargs)
 
         if self.targs.shape:
             for shape_arg in self.targs.shape:
@@ -146,10 +140,3 @@ class print_task(Task):
             elif gvars["D"] is not None:
                 _print(gvars["D"])
 
-        outvars = {}
-        if self.targs.output:
-            for output_arg in self.targs.output:
-                s = output_arg.split("$")
-                vargs, kwargs = funcargs_eval(s[0], s[1:], gvars)
-                outvars.update(kwargs)
-        return outvars
