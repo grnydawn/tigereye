@@ -9,6 +9,10 @@ from .entry import teye_entry_task
 from .parse import teye_task_parse
 from .mgmt import teye_mgmt_task
 
+# TODO: revise option interface with multiple @
+# TODO: support add-option and remove-option options
+# TODO: support import-module option
+
 def entry():
     return main(sys.argv[1:])
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"tigereye print core task module."
+"tigereye verify core task module."
 
 import os
 import argparse
