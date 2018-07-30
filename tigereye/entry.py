@@ -38,6 +38,7 @@ def parse_global_opts(argv):
     parser.add_argument('data', nargs='+', help='input data.')
     parser.add_argument('--data-format', action="append", help='input data format.')
     parser.add_argument('--pdf-bind', help='generate pdf binding.')
+    parser.add_argument('--version',  action='version', version='tigereye version 0.2.0')
 
     # split global and task options
     global_argv = []
