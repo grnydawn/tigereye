@@ -39,7 +39,6 @@ def _read_data(data_format, idx, target, gvars):
                 reader = getattr(gvars["pd"], "read_"+fmt.strip())
                 return reader(target, *vargs, **kwargs)
     else:
-        import pdb; pdb.set_trace()
         readers = [getattr(gvars['pd'], v) for v in dir(gvars['pd']) if v.startswith("read_")]
         _,ext = os.path.splitext(target)
         readers.insert(0, _reader_by_ext(ext, gvars['pd']))
