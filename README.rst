@@ -93,7 +93,7 @@ Data is generated using numpy.
 
     $ tigereye \
         "numpy.linspace(0, 2*numpy.pi)" \
-        "numpy.sin(D[0])" \
+        "numpy.sin(D[0].values)" \
         -t "'Sample Plot', fontsize=16" \
         -x "label@'X', fontsize=12" \
         -y "label@'Y', fontsize=12" \
@@ -105,7 +105,10 @@ Plot is generated using a template .
 .. code-block:: text
 
     $ tigereye \
-        -i https://raw.githubusercontent.com/grnydawn/tigereye/master/template/basic/sample1.tgr \
+        "numpy.linspace(0, 2*numpy.pi)" \
+        "numpy.cos(D[0].values)" \
+        "--import-task" \
+        "https://raw.githubusercontent.com/grnydawn/tigereye/master/template/basic/sample1.tgr?name=sinplot@X=D[0].values, Y=D[1].values" \
         -t "'My Plot'"
 
 Data is read from a local file.
@@ -115,15 +118,15 @@ Data is read from a local file.
 
     $ echo $'1,2,3\n4,5,6\n7,8,9' > simple.csv
     $ tigereye simple.csv \
-        --data-format "numpytext, delimiter=','" \
-        -v "row0=d0[0,:]" \
-        -v "row1=d0[1,:]" \
-        -v "row2=d0[2,:]" \
+        --data-format "csv@delimiter=',', header=None" \
+        --calc "row0=D[0].values" \
+        --calc "row1=D[1].values" \
+        --calc "row2=D[2].values" \
         -t "'Sample Plot', fontsize=16" \
-        -x "label='X', fontsize=12" \
-        -y "label='Y', fontsize=12" \
-        -p "plot, row0, row2, label='line-1'" \
-        -p "bar, row0, row1, width= 0.5, label='bar-1'" \
+        -x "label@'X', fontsize=12" \
+        -y "label@'Y', fontsize=12" \
+        -p "plot@row0, row2, label='line-1'" \
+        -p "bar@ row0, row1, width= 0.5, label='bar-1'" \
         -g \
         -l
 
@@ -133,15 +136,15 @@ Data is read from online.
 .. code-block:: text
 
     $ tigereye https://raw.githubusercontent.com/grnydawn/tigereye/master/data/simple.csv \
-        --data-format "numpytext, delimiter=','" \
-        -v "row0=d0[0,:]" \
-        -v "row1=d0[1,:]" \
-        -v "row2=d0[2,:]" \
+        --data-format "csv@ delimiter=',', header=None" \
+        --calc "row0=D[0].values" \
+        --calc "row1=D[1].values" \
+        --calc "row2=D[2].values" \
         -t "'Sample Plot', fontsize=16" \
-        -x "label='X', fontsize=12" \
-        -y "label='Y', fontsize=12" \
-        -p "plot, row0, row2, label='line-1'" \
-        -p "bar, row0, row1, width= 0.5, label='bar-1'" \
+        -x "label@'X', fontsize=12" \
+        -y "label@'Y', fontsize=12" \
+        -p "plot@ row0, row2, label='line-1'" \
+        -p "bar,@row0, row1, width= 0.5, label='bar-1'" \
         -g \
         -l
 
@@ -151,14 +154,14 @@ Multi-page PDF file is generated .
 .. code-block:: text
 
     $ tigereye https://raw.githubusercontent.com/grnydawn/tigereye/master/data/simple.csv \
-        --data-format "numpytext, delimiter=','" \
-        -x "label='X', fontsize=12" \
-        -y "label='Y', fontsize=12" \
-        --pages "len(d0), pdf_merge=True" \
-        -p "plot, numpy.arange(len(d0)), d0[page_num, :], label='line-%d'%page_num" \
+        --pdf-bind "'sample.pdf'" \
+        --data-format "csv@ delimiter=',', header=None" \
+        -x "label@'X', fontsize=12" \
+        -y "label@'Y', fontsize=12" \
+        --calc "npages = D.shape[0]" \
+        --pages "npages" \
+        -p "plot@ numpy.arange(npages), D.values[page_num, :], label='line-%d'%page_num" \
         -t "'Page-%d'%page_num" \
-        -s "'sample.pdf'" \
-        --noshow \
         -g \
         -l
 

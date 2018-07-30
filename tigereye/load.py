@@ -38,21 +38,8 @@ def _read_data(data_format, idx, target, gvars):
             if fmt:
                 reader = getattr(gvars["pd"], "read_"+fmt.strip())
                 return reader(target, *vargs, **kwargs)
-#
-#
-#
-#            if rvargs or rkwargs:
-#                if not lvargs or str(idx) in lvargs:
-#                    reader = getattr(gvars["pd"], "read_"+rvargs[0].strip())
-#                    attrs = [k+"="+v for k, v in rkwargs.items()]
-#                    vargs, kwargs = funcargs_eval(",".join(attrs), [], gvars)
-#                    return reader(target, **kwargs)
-#            else:
-#                reader = getattr(gvars["pd"], "read_"+lvargs[0].strip())
-#                attrs = [k+"="+v for k, v in lkwargs.items()]
-#                vargs, kwargs = funcargs_eval(",".join(attrs), [], gvars)
-#                return reader(target, **kwargs)
     else:
+        import pdb; pdb.set_trace()
         readers = [getattr(gvars['pd'], v) for v in dir(gvars['pd']) if v.startswith("read_")]
         _,ext = os.path.splitext(target)
         readers.insert(0, _reader_by_ext(ext, gvars['pd']))

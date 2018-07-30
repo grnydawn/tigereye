@@ -180,7 +180,8 @@ def get_localpath(path):
             f = urlopen(path)
             rdata = f.read()
             f.close()
-            t = tempfile.NamedTemporaryFile(delete=False)
+            _, ext = os.path.splitext(path)
+            t = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
             t.write(rdata)
             t.close()
             return t.name
