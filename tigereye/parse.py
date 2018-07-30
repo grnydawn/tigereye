@@ -7,7 +7,11 @@ import shlex
 import string
 
 from .core_tasks import tasks
-from .util import get_localpath
+from .util import get_localpath, PY3, error_warn
+
+if PY3:
+    import importlib
+    __import__ = importlib.__import__
 
 def _read_task(targ, gvars):
 
@@ -100,6 +104,7 @@ def _import(targv, gvars):
     imp_funcs = {}
     task_found = False
     function_found = False
+    module_found = False
 
     for targ in targv:
 
@@ -109,10 +114,26 @@ def _import(targv, gvars):
         elif function_found:
             imp_funcs = _read_function(targ, gvars)
             function_found = False
+        elif module_found:
+            items = targ.split("@")
+            mod = __import__(items[0].strip())
+            if len(items) == 2:
+
+                if items[1].strip() not in string.ascii_uppercase[:26]:
+                    gvars[k] = v
+                else:
+                    error_warn("'%s' is a reserved word."%k)
+
+                gvars[items[0].strip()] = gvars[items[1].strip()] = mod
+            elif len(items) == 1:
+                gvars[items[0].strip()] = mod
+            module_found = False
         elif targ == "--import-task":
             task_found = True
         elif targ == "--import-function":
             function_found = True
+        elif targ == "--import-module":
+            module_found = True
         else:
             new_targv.append(targ)
 
@@ -126,7 +147,7 @@ def _parse(targv, gvars):
         if k not in string.ascii_uppercase[:26]:
             gvars[k] = v
         else:
-            raise UsageWarning("'%s' is a reserved word."%k)
+            error_warn("'%s' is a reserved word."%k)
 
     tcls = tasks.get(tname, None)
 

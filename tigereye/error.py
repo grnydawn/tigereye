@@ -15,9 +15,6 @@ class InternalError(Error):
 class UsageError(Error):
     pass
 
-class UsageWarning(Error):
-    pass
-
 class NormalExit(Error):
     pass
 

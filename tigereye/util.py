@@ -31,6 +31,23 @@ _builtins = {
     "True":     True,
 }
 
+def args_pop(args, name, num_remove):
+    target = []
+    newargs = []
+    nitems = 0
+
+    for arg in args:
+        if nitems > 0:
+            target[-1].append(arg)
+            nitems -= 1
+        elif arg == name:
+            target.append([])
+            nitems = num_remove
+        else:
+            newargs.append(arg)
+
+    return newargs, target
+
 class teye_globals(dict):
 
     def __init__(self, *vargs, **kwargs):
@@ -52,6 +69,9 @@ def subclasses(cls):
 def error_exit(exc):
     print("ERROR: %s"%str(exc))
     sys.exit(-1)
+
+def error_warn(exc):
+    print("WARNING: %s"%str(exc))
 
 def teval(expr, varmaps, g, **kwargs):
 
@@ -78,7 +98,7 @@ def funcargs_eval(args_str, varmaps, gvars):
     return teval('_p(%s)'%args_str, varmaps, gvars, _p=_parse)
 
 
-def parse_subargs(text, varmaps, gvars, left_eval=True, right_eval=True):
+def parse_optionvalue(text, varmaps, gvars, evals=None):
 
     def _unstrmap(text, strmap):
 
@@ -116,7 +136,10 @@ def parse_subargs(text, varmaps, gvars, left_eval=True, right_eval=True):
 
         return "".join(out), strmap
 
-    def _parse(lv, lk, text):
+    def _parse(text):
+
+        lv = []
+        lk = {}
 
         newtext, strmap = _strmap(text)
 
@@ -127,31 +150,26 @@ def parse_subargs(text, varmaps, gvars, left_eval=True, right_eval=True):
             else:
                 lv.append(_unstrmap(item, strmap))
 
+        return (lv, lk)
+
+    out = []
+
     tsplit = text.split('@')
+    right = tsplit[-1]
 
-    if len(tsplit) == 2:
-        left, right = tsplit
-    elif len(tsplit) == 1:
-        left, right = tsplit[0], None
+    levals = 0 if evals is None else len(evals)
+    litems = len(tsplit[:-1])
+    assert levals == 0 or litems <= levals
 
-    if left_eval:
-        lvargs, lkwargs = funcargs_eval(left, varmaps, gvars)
-    else:
-        lvargs = []
-        lkwargs = {}
-        _parse(lvargs, lkwargs, left)
-
-
-    rvargs = []
-    rkwargs = {}
-
-    if right:
-        if right_eval:
-            rvargs, rkwargs = funcargs_eval(right, varmaps, gvars)
+    for idx, left in enumerate(tsplit[:-1]):
+        if levals == 0 or idx >= levals or evals[idx+levals-litems] is not True:
+            out.append(_parse(left))
         else:
-            varmaps = _parse(rvargs, rkwargs, right)
+            out.append(funcargs_eval(left, varmaps, gvars))
 
-    return lvargs, lkwargs, rvargs, rkwargs
+    vargs, kwargs = funcargs_eval(right, varmaps, gvars)
+
+    return out, vargs, kwargs
 
 def get_localpath(path):
 

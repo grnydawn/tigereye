@@ -5,7 +5,7 @@ import os
 import tempfile
 
 from .error import UsageError
-from .util import (teval, parse_subargs, funcargs_eval, get_localpath,
+from .util import (teval, parse_optionvalue, funcargs_eval, get_localpath,
     )
 
 def _reader_by_ext(ext, pd):
@@ -18,21 +18,40 @@ def _reader_by_ext(ext, pd):
 def _read_data(data_format, idx, target, gvars):
 
     if data_format:
+
         # user-specified formats
-        for fmt in data_format:
-            lvargs, lkwargs, rvargs, rkwargs = \
-                parse_subargs(fmt, [], {}, left_eval=False, right_eval=False)
-            if rvargs or rkwargs:
-                if not lvargs or str(idx) in lvargs:
-                    reader = getattr(gvars["pd"], "read_"+rvargs[0].strip())
-                    attrs = [k+"="+v for k, v in rkwargs.items()]
-                    vargs, kwargs = funcargs_eval(",".join(attrs), [], gvars)
-                    return reader(target, **kwargs)
+        for fmt_arg in data_format:
+            # syntax: [input index@]fmtname@funcargs
+            s = fmt_arg.split("$")
+            items, vargs, kwargs = parse_optionvalue(s[0], s[1:], gvars, evals=[True, False])
+
+            if len(items) == 1:
+                fmt = items[0][0][0]
+            elif len(items) == 2:
+                if idx in items[0][0]:
+                    fmt = items[1][0][0]
+                else:
+                    fmt = None
             else:
-                reader = getattr(gvars["pd"], "read_"+lvargs[0].strip())
-                attrs = [k+"="+v for k, v in lkwargs.items()]
-                vargs, kwargs = funcargs_eval(",".join(attrs), [], gvars)
-                return reader(target, **kwargs)
+                UsageError("The synaxt error near '@': %s"%fmt_arg)
+
+            if fmt:
+                reader = getattr(gvars["pd"], "read_"+fmt.strip())
+                return reader(target, *vargs, **kwargs)
+#
+#
+#
+#            if rvargs or rkwargs:
+#                if not lvargs or str(idx) in lvargs:
+#                    reader = getattr(gvars["pd"], "read_"+rvargs[0].strip())
+#                    attrs = [k+"="+v for k, v in rkwargs.items()]
+#                    vargs, kwargs = funcargs_eval(",".join(attrs), [], gvars)
+#                    return reader(target, **kwargs)
+#            else:
+#                reader = getattr(gvars["pd"], "read_"+lvargs[0].strip())
+#                attrs = [k+"="+v for k, v in lkwargs.items()]
+#                vargs, kwargs = funcargs_eval(",".join(attrs), [], gvars)
+#                return reader(target, **kwargs)
     else:
         readers = [getattr(gvars['pd'], v) for v in dir(gvars['pd']) if v.startswith("read_")]
         _,ext = os.path.splitext(target)

@@ -6,31 +6,26 @@ import argparse
 
 from ..task import Task
 from ..error import UsageError
-from ..util import teval, funcargs_eval, parse_subargs
+from ..util import teval, funcargs_eval, parse_optionvalue
 
 class verify_task(Task):
 
     def __init__(self, targv):
 
-        parser = argparse.ArgumentParser(description='tigereye verifying task')
-        parser.add_argument("-t", '--test', metavar='test', action='append', help='testing)')
-        parser.add_argument("-p", '--onpass', metavar='pass', action='append', help='on pass)')
-        parser.add_argument("-f", '--onfail', metavar='fail', action='append', help='on fail)')
-        parser.add_argument("-e", '--onerror', metavar='error', action='append', help='on error)')
-        parser.add_argument('--calc', metavar='calc', action='append', help='python code for manipulating data.')
-        parser.add_argument('--import-task', metavar='task', action='append', help='import task')
-        parser.add_argument('--import-function', metavar='function', action='append', help='import function')
-        parser.add_argument('--output', metavar='output', action='append', help='output variable.')
-        parser.add_argument('--name', metavar='task name', help='task name')
-        parser.add_argument('--version', action='version', version='tigereye verifying task version 0.0.0')
+        self.parser.add_argument("-t", '--test', metavar='test', action='append', help='testing)')
+        self.parser.add_argument("-p", '--onpass', metavar='pass', action='append', help='on pass)')
+        self.parser.add_argument("-f", '--onfail', metavar='fail', action='append', help='on fail)')
+        self.parser.add_argument("-e", '--onerror', metavar='error', action='append', help='on error)')
+        self.parser.add_argument('--version', action='version', version='tigereye verifying task version 0.0.0')
 
-        self.targs = parser.parse_args(targv)
+        self.targs = self.parser.parse_args(targv)
 
-    def _call(self, action, gvars):
+    def _call(self, gvars, *vargs, **kwargs):
         import pdb; pdb.set_trace()
 
-    def _print(self, action, gvars):
-        print(teval(action, [], gvars))
+    def _print(self, gvars, *vargs, **kwargs):
+        for varg in vargs:
+            print(varg+"\n")
 
     def perform(self, gvars):
 
@@ -60,7 +55,7 @@ class verify_task(Task):
             for idx, test_arg in enumerate(self.targs.test):
                 s = test_arg.split("$")
                 split_arg = s[0].split("@")
-
+                # syntax: [testname@]test
                 try:
                     if len(split_arg) == 1:
                         tests['test%d'%idx] = None
@@ -76,55 +71,71 @@ class verify_task(Task):
         gvars.update(tests)
 
         if self.targs.onerror:
-            for fail_arg in self.targs.onerror:
-                s = fail_arg.split("$")
-                head, action = s[0].split("@")
-                split_head = head.split(",")
+            for error_arg in self.targs.onerror:
+                s = error_arg.split("$")
 
-                if len(split_head) == 1:
-                    testname = "test0"
-                    actiontype = split_head[0].strip()
-                elif len(split_head) == 2:
-                    testname = split_head[0].strip()
-                    actiontype = split_head[1].strip()
+                # syntax: [testname[, testname...]@]funcname@funcargs
+                # text, varmap, gvars, evals
+                items, vargs, kwargs = parse_optionvalue(s[0], s[1:], gvars)
 
-                if gvars[testname] == None:
-                    getattr(self, "_"+actiontype)(action.strip(), gvars)
-                    verified.add(True)
+                if len(items) == 1:
+                    tests = ["test0"]
+                    action = items[0][0][0]
+                elif len(items) == 2:
+                    tests = items[0][0]
+                    action = items[1][0][0]
+                else:
+                    UsageError("Following option needs one or two items at the left of @: %s"%error_arg)
+
+                for test in tests:
+                    if gvars[test] == None:
+                        getattr(self, "_"+action)(gvars, *vargs, **kwargs)
+                        verified.add(True)
 
         if self.targs.onfail:
             for fail_arg in self.targs.onfail:
                 s = fail_arg.split("$")
-                head, action = s[0].split("@")
-                split_head = head.split(",")
 
-                if len(split_head) == 1:
-                    testname = "test0"
-                    actiontype = split_head[0].strip()
-                elif len(split_head) == 2:
-                    testname = split_head[0].strip()
-                    actiontype = split_head[1].strip()
+                # syntax: [testname[, testname...]@]funcname@funcargs
+                # text, varmap, gvars, evals
+                items, vargs, kwargs = parse_optionvalue(s[0], s[1:], gvars)
 
-                if gvars[testname] == False:
-                    getattr(self, "_"+actiontype)(action.strip(), gvars)
-                    verified.add(True)
+                if len(items) == 1:
+                    tests = ["test0"]
+                    action = items[0][0][0]
+                elif len(items) == 2:
+                    tests = items[0][0]
+                    action = items[1][0][0]
+                else:
+                    UsageError("Following option needs one or two items at the left of @: %s"%fail_arg)
+
+                for test in tests:
+                    if gvars[test] == False:
+                        getattr(self, "_"+action)(gvars, *vargs, **kwargs)
+                        verified.add(True)
+
 
         if self.targs.onpass:
             for pass_arg in self.targs.onpass:
                 s = pass_arg.split("$")
-                head, action = s[0].split("@")
-                split_head = head.split(",")
 
-                if len(split_head) == 1:
-                    testname = "test0"
-                    actiontype = split_head[0].strip()
-                elif len(split_head) == 2:
-                    testname = split_head[0].strip()
-                    actiontype = split_head[1].strip()
+                # syntax: [testname[, testname...]@]funcname@funcargs
+                # text, varmap, gvars, evals
+                items, vargs, kwargs = parse_optionvalue(s[0], s[1:], gvars)
 
-                if gvars[testname] == True:
-                    getattr(self, "_"+actiontype)(action.strip(), gvars)
-                    verified.add(True)
+                if len(items) == 1:
+                    tests = ["test0"]
+                    action = items[0][0][0]
+                elif len(items) == 2:
+                    tests = items[0][0]
+                    action = items[1][0][0]
+                else:
+                    UsageError("Following option needs one or two items at the left of @: %s"%pass_arg)
+
+                for test in tests:
+                    if gvars[test] == True:
+                        getattr(self, "_"+action)(gvars, *vargs, **kwargs)
+                        verified.add(True)
 
         if not verified:
             for tname, results in tests.items():

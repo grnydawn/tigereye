@@ -6,22 +6,16 @@ import argparse
 
 from ..task import Task
 from ..error import UsageError
-from ..util import teval, funcargs_eval, parse_subargs
+from ..util import teval, funcargs_eval
 
 class clean_task(Task):
 
     def __init__(self, targv):
 
-        parser = argparse.ArgumentParser(description='tigereye cleaning task')
-        parser.add_argument("-i", '--inspect', metavar='inspect', action='append', help='inspection)')
-        parser.add_argument('--calc', metavar='calc', action='append', help='python code for manipulating data.')
-        parser.add_argument('--import-task', metavar='task', action='append', help='import task')
-        parser.add_argument('--import-function', metavar='function', action='append', help='import function')
-        parser.add_argument('--output', metavar='output', action='append', help='output variable.')
-        parser.add_argument('--name', metavar='task name', help='task name')
-        parser.add_argument('--version', action='version', version='tigereye verifying task version 0.0.0')
+        self.parser.add_argument("-i", '--inspect', metavar='inspect', action='append', help='inspection)')
+        self.parser.add_argument('--version', action='version', version='tigereye verifying task version 0.0.0')
 
-        self.targs = parser.parse_args(targv)
+        self.targs = self.parser.parse_args(targv)
 
     def _call(self, action, gvars):
         import pdb; pdb.set_trace()
@@ -31,10 +25,21 @@ class clean_task(Task):
 
     def perform(self, gvars):
 
+        def _get_results(vargs):
+            if len(vargs) > 1:
+                results = vargs
+            elif len(vargs) == 1:
+                results = vargs[0]
+            else:
+                results = None
+            return results
+
         if self.targs.inspect:
             for idx, inspect_arg in enumerate(self.targs.inspect):
                 s = test_arg.split("$")
                 split_arg = s[0].split("@")
+                # syntax: [inspectname@]data[, data...]@inspect[,inspect...]
+                # name = D.map(f)
 
                 try:
                     if len(split_arg) == 1:

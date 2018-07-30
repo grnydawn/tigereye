@@ -67,9 +67,9 @@ def test_onpass_function(capsys):
         "[4.0, numpy.nan, 6.0]",
         "-t", "t1@D.dtypes == numpy.float",
         "--import-function", "%s?name=locate"%local_function1,
-        "--onpass", "t1, print@'PASSED'",
-        "--onfail", "t1, call@X=locate(D)",
-        "--onerror", "t1, print@'ERROR'",
+        "--onpass", "t1@print@'PASSED'",
+        "--onfail", "t1@call@X=locate(D)",
+        "--onerror", "t1@print@'ERROR'",
         "--output", "out=X"
     ]
 

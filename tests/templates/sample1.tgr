@@ -1,8 +1,8 @@
 tigereye
 dummy1, dummy2
 --name sinplot
---ax "ax@111"
+--subplot "ax@111"
 -t "'Sample Plot', fontsize=16"
 -x "label@'X', fontsize=12"
 -y "label@'Y', fontsize=12"
--p "ax,plot@ X, Y, label='line1'"
+-p "ax@plot@ X, Y, label='line1'"

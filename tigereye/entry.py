@@ -3,7 +3,7 @@
 
 import argparse
 
-from .util import error_exit, parse_subargs
+from .util import error_exit, parse_optionvalue
 
 try:
     import numpy
@@ -23,11 +23,13 @@ def handle_global_options(gargs, gvars):
     if gargs.pdf_bind:
 
         s = gargs.pdf_bind.split("$")
-        lvargs, lkwargs, rvargs, rkwargs = \
-            parse_subargs('r'+s[0], s[1:], gvars)
+
+        # syntax: funcargs
+        # text, varmap, gvars, evals
+        items, vargs, kwargs = parse_optionvalue('r'+s[0], s[1:], gvars)
 
         from matplotlib.backends.backend_pdf import PdfPages
-        gvars["B"] = PdfPages(*lvargs, **lkwargs)
+        gvars["B"] = PdfPages(*vargs, **kwargs)
 
 def parse_global_opts(argv):
 

@@ -49,7 +49,7 @@ def test_folding(capsys):
     argv = [
         "print",
         folding_data1,
-        "--data-format", "csv, delimiter=';', header=None",
+        "--data-format", "csv@delimiter=';', header=None",
         "--calc", "brcn=D.loc[D.iloc[:,2]=='PAPI_BR_CN',:]",
         "-s", "brcn",
         "--output", "x=brcn.iloc[:,3],y=brcn.iloc[:,4]"

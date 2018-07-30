@@ -6,40 +6,34 @@ import argparse
 
 from ..task import Task
 from ..error import UsageError
-from ..util import funcargs_eval, parse_subargs, error_exit
+from ..util import funcargs_eval, parse_optionvalue, error_exit
 
 class plot_task(Task):
 
     def __init__(self, targv):
 
-        parser = argparse.ArgumentParser(description='tigereye plotting task')
-        parser.add_argument('-f', metavar='figure creation', help='define a figure for plotting.')
-        parser.add_argument('-t', '--title', metavar='title', action='append', help='title  plotting.')
-        parser.add_argument('-p', '--plot', metavar='plot type', action='append', help='plot type for plotting.')
-        parser.add_argument('-s', '--save', metavar='save', action='append', help='file path to save png image.')
-        parser.add_argument('-x', '--xaxis', metavar='xaxis', action='append', help='axes function wrapper for x axis settings.')
-        parser.add_argument('-y', '--yaxis', metavar='yaxis', action='append', help='axes function wrapper for y axis settings.')
-        parser.add_argument('-z', '--zaxis', metavar='zaxis', action='append', help='axes function wrapper for z axis settings.')
-        parser.add_argument('-g', action='store_true', help='grid for ax plotting.')
-        parser.add_argument('-l', action='store_true', help='legend for ax plotting')
-        parser.add_argument('--import-task', metavar='task', action='append', help='import task')
-        parser.add_argument('--import-function', metavar='function', action='append', help='import function')
-        parser.add_argument('--name', metavar='task name', help='task name')
-        parser.add_argument('--calc', metavar='calc', action='append', help='python code for manipulating data.')
-        parser.add_argument('--output', metavar='output', action='append', help='output variable.')
-        parser.add_argument('--pandas', metavar='pandas', action='append', help='pandas plots.')
-        parser.add_argument('--pages', metavar='pages', help='page settings.')
-        parser.add_argument('--page-calc', metavar='page_calc', action='append', help='python code for manipulating data within page generation.')
-        parser.add_argument('--legend', metavar='legend', action='append', help='plot legend')
-        parser.add_argument('--grid', metavar='grid', action='append', help='grid for plotting.')
-        parser.add_argument('--ax', metavar='ax', action='append', help='define plot axes.')
-        parser.add_argument('--figure', metavar='figure function', action='append', help='define Figure function.')
-        parser.add_argument('--axes', metavar='axes', action='append', help='define Axes function.')
-        parser.add_argument('--noshow', action='store_true', default=False, help='prevent showing plot on screen.')
-        parser.add_argument('--noplot', action='store_true', default=False, help='prevent generating plot.')
-        parser.add_argument('--version', action='version', version='tigereye plotting task version 0.0.0')
+        self.parser.add_argument('-f', metavar='figure creation', help='define a figure for plotting.')
+        self.parser.add_argument('-t', '--title', metavar='title', action='append', help='title  plotting.')
+        self.parser.add_argument('-p', '--plot', metavar='plot type', action='append', help='plot type for plotting.')
+        self.parser.add_argument('-s', '--save', metavar='save', action='append', help='file path to save png image.')
+        self.parser.add_argument('-x', '--xaxis', metavar='xaxis', action='append', help='axes function wrapper for x axis settings.')
+        self.parser.add_argument('-y', '--yaxis', metavar='yaxis', action='append', help='axes function wrapper for y axis settings.')
+        self.parser.add_argument('-z', '--zaxis', metavar='zaxis', action='append', help='axes function wrapper for z axis settings.')
+        self.parser.add_argument('-g', action='store_true', help='grid for ax plotting.')
+        self.parser.add_argument('-l', action='store_true', help='legend for ax plotting')
+        self.parser.add_argument('--pandas', metavar='pandas', action='append', help='pandas plots.')
+        self.parser.add_argument('--pages', metavar='pages', help='page settings.')
+        self.parser.add_argument('--page-calc', metavar='page_calc', action='append', help='python code for manipulating data within page generation.')
+        self.parser.add_argument('--legend', metavar='legend', action='append', help='plot legend')
+        self.parser.add_argument('--grid', metavar='grid', action='append', help='grid for plotting.')
+        self.parser.add_argument('--subplot', metavar='subplot', action='append', help='define subplot.')
+        self.parser.add_argument('--figure', metavar='figure function', action='append', help='define Figure function.')
+        self.parser.add_argument('--axes', metavar='axes', action='append', help='define Axes function.')
+        self.parser.add_argument('--noshow', action='store_true', default=False, help='prevent showing plot on screen.')
+        self.parser.add_argument('--noplot', action='store_true', default=False, help='prevent generating plot.')
+        self.parser.add_argument('--version', action='version', version='tigereye plotting task version 0.0.0')
 
-        self.targs = parser.parse_args(targv)
+        self.targs = self.parser.parse_args(targv)
 
     def perform(self, gvars):
 
@@ -77,20 +71,27 @@ class plot_task(Task):
                 gvars['figure'] = gvars['pyplot'].figure()
 
             # plot axis
-            if self.targs.ax:
-                for ax_arg in self.targs.ax:
+            if self.targs.subplot:
+                for subplot_arg in self.targs.subplot:
                     # split by $; apply variable mapping repeatedly
-                    s = ax_arg.split("$")
-                    lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(s[0], s[1:], gvars, left_eval=False)
-                    for axname in lvargs:
-                        if 'projection' in rkwargs and rkwargs['projection'] == '3d':
+                    s = subplot_arg.split("$")
+
+                    # syntax: subplotname@funcargs
+                    # text, varmap, gvars, evals
+                    items, vargs, kwargs = parse_optionvalue(s[0], s[1:], gvars)
+
+                    if len(items) == 1:
+                        subpname = items[0][0][0]
+
+                        if 'projection' in kwargs and kwargs['projection'] == '3d':
                              from mpl_toolkits.mplot3d import Axes3D
                              gvars['Axes3D'] = Axes3D
-                        if rvargs:
-                            gvars[axname] = gvars['figure'].add_subplot(rvargs[0], **rkwargs)
+                        if vargs:
+                            gvars[subpname] = gvars['figure'].add_subplot(*vargs, **kwargs)
                         else:
-                            gvars[axname] = gvars['figure'].add_subplot(111, **rkwargs)
+                            gvars[subpname] = gvars['figure'].add_subplot(111, **kwargs)
+                    else:
+                        UsageError("The synaxt error near '@': %s"%subplot_arg)
 
             # page names
             if 'page_names' in gvars:
@@ -106,11 +107,17 @@ class plot_task(Task):
             if self.targs.figure:
                 for fig_arg in self.targs.figure:
                     s = fig_arg.split("$")
-                    lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(s[0], s[1:], gvars, left_eval=False)
 
-                    for figfunc in lvargs:
-                        getattr(gvars['figure'], figfunc)(*rvargs, **rkwargs)
+                    # syntax: funcname@funcargs
+                    # text, varmap, gvars, evals
+                    items, vargs, kwargs = parse_optionvalue(s[0], s[1:], gvars)
+
+                    if len(items) == 1:
+                        funcname = items[0][0][0]
+                    else:
+                        UsageError("The synaxt error near '@': %s"%fig_arg)
+
+                    getattr(gvars['figure'], funcname)(*vargs, **kwargs)
 
             if self.targs.pandas:
                 s = self.targs.pandas.split("$")
@@ -122,7 +129,7 @@ class plot_task(Task):
                 else:
                     raise UsageError("pandas option has wrong syntax on using '@': %s"%self.targs.pandas)
 
-            elif not self.targs.ax:
+            elif not self.targs.subplot:
                 gvars['ax'] = gvars['figure'].add_subplot(111)
 
             # plotting
@@ -130,30 +137,36 @@ class plot_task(Task):
             if self.targs.plot:
                 for plot_arg in self.targs.plot:
                     s = plot_arg.split("$")
-                    lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(s[0], s[1:], gvars, left_eval=False)
 
-                    ##if not lvargs or not isinstance(gvars[lvargs[0]], gvars['mpl'].axes.Axes):
+                    # syntax: [axname[, axname...]@]funcname@funcargs
+                    # text, varmap, gvars, evals
+                    items, vargs, kwargs = parse_optionvalue(s[0], s[1:], gvars, evals=[True, False])
 
-                    if len(lvargs) == 1:
-                        ax = "ax"
-                        funcname = lvargs[0]
-                    elif len(lvargs) == 2:
-                        ax = lvargs[0]
-                        funcname = lvargs[1]
+                    if len(items) == 1:
+                        axes = [gvars["ax"]]
+                        funcname = items[0][0][0]
+                    elif len(items) == 2:
+                        axes = items[0][0]
+                        funcname = items[1][0][0]
                     else:
                         UsageError("Following option needs one or two items at the left of @: %s"%plot_arg)
 
-                    plot_handle = getattr(gvars[ax], funcname)(*rvargs, **rkwargs)
+                    for ax in axes:
+                        if hasattr(ax, funcname):
+                            plot_handle = getattr(ax, funcname)(*vargs, **kwargs)
 
-                    try:
-                        for p in plot_handle:
-                            plots.append(p)
-                    except TypeError:
-                        plots.append(plot_handle)
+                            try:
+                                for p in plot_handle:
+                                    plots.append(p)
+                            except TypeError:
+                                plots.append(plot_handle)
+                        else:
+                            # TODO: handling this case
+                            pass
 
                     if funcname == 'pie':
-                        gvars[ax].axis('equal')
+                        for ax in axes:
+                            gvars[ax].axis('equal')
 
             if 'plots' in gvars:
                 gvars['plots'].extend(plots)
@@ -164,83 +177,95 @@ class plot_task(Task):
             if self.targs.title:
                 for title_arg in self.targs.title:
                     s = title_arg.split("$")
-                    lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(s[0], s[1:], gvars)
 
-                    if rvargs or rkwargs:
-                        for ax in lvargs:
-                            ax.set_title(*rvargs, **rkwargs)
-                    elif lvargs or lkwargs:
-                        gvars["ax"].set_title(*lvargs, **lkwargs)
+                    # syntax: [axname[,axname...]@]funcargs
+                    # text, varmap, gvars, evals
+                    items, vargs, kwargs = parse_optionvalue(s[0], s[1:], gvars, evals=[True])
+
+                    if len(items) == 0:
+                        axes = [gvars["ax"]]
+                    elif len(items) == 1:
+                        axes = items[0][0]
                     else:
-                        gvars["ax"].set_title()
+                        UsageError("The synaxt error near '@': %s"%title_arg)
+
+                    for ax in axes:
+                        ax.set_title(*vargs, **kwargs)
 
             # x-axis setting
             if self.targs.xaxis:
                 for xaxis_arg in self.targs.xaxis:
                     s = xaxis_arg.split("$")
-                    lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(s[0], s[1:], gvars, left_eval=False)
 
-                    if len(lvargs) == 1:
-                        ax = "ax"
-                        funcname = lvargs[0]
-                    elif len(lvargs) == 2:
-                        ax = lvargs[0]
-                        funcname = lvargs[1]
+                    # syntax: [axname[, axname...]@]funcname@funcargs
+                    # text, varmap, gvars, evals
+                    items, vargs, kwargs = parse_optionvalue(s[0], s[1:], gvars, evals=[True, False])
+
+                    if len(items) == 1:
+                        axes = [gvars["ax"]]
+                        funcname = "set_x"+items[0][0][0]
+                    elif len(items) == 2:
+                        axes = items[0][0]
+                        funcname = "set_x"+items[1][0][0]
                     else:
                         UsageError("Following option needs one or two items at the left of @: %s"%xaxis_arg)
 
-                    set_xfuncs =  dict((x, getattr(gvars[ax], x)) for x in dir(gvars[ax]) if x.startswith('set_x'))
+                    for ax in axes:
+                        if hasattr(ax, funcname):
+                            getattr(ax, funcname)(*vargs, **kwargs)
+                        else:
+                            # TODO: handling this case
+                            pass
 
-                    func = set_xfuncs.get("set_x"+funcname, None)
-                    if func: 
-                        func(*rvargs, **rkwargs)
-
-
-            # y-axis setting
+           # y-axis setting
             if self.targs.yaxis:
                 for yaxis_arg in self.targs.yaxis:
                     s = yaxis_arg.split("$")
-                    lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(s[0], s[1:], gvars, left_eval=False)
 
-                    if len(lvargs) == 1:
-                        ax = "ax"
-                        funcname = lvargs[0]
-                    elif len(lvargs) == 2:
-                        ax = lvargs[0]
-                        funcname = lvargs[1]
+                    # syntax: [axname[, axname...]@]funcname@funcargs
+                    # text, varmap, gvars, evals
+                    items, vargs, kwargs = parse_optionvalue(s[0], s[1:], gvars, evals=[True, False])
+
+                    if len(items) == 1:
+                        axes = [gvars["ax"]]
+                        funcname = "set_y"+items[0][0][0]
+                    elif len(items) == 2:
+                        axes = items[0][0]
+                        funcname = "set_y"+items[1][0][0]
                     else:
                         UsageError("Following option needs one or two items at the left of @: %s"%yaxis_arg)
 
-                    set_yfuncs =  dict((y, getattr(gvars[ax], y)) for y in dir(gvars[ax]) if y.startswith('set_y'))
-
-                    func = set_yfuncs.get("set_y"+funcname, None)
-                    if func: 
-                        func(*rvargs, **rkwargs)
+                    for ax in axes:
+                        if hasattr(ax, funcname):
+                            getattr(ax, funcname)(*vargs, **kwargs)
+                        else:
+                            # TODO: handling this case
+                            pass
 
             # z-axis setting
             if self.targs.zaxis:
                 for zaxis_arg in self.targs.zaxis:
                     s = zaxis_arg.split("$")
-                    lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(s[0], s[1:], gvars, left_eval=False)
 
-                    if len(lvargs) == 1:
-                        ax = "ax"
-                        funcname = lvargs[0]
-                    elif len(lvargs) == 2:
-                        ax = lvargs[0]
-                        funcname = lvargs[1]
+                    # syntax: [axname[, axname...]@]funcname@funcargs
+                    # text, varmap, gvars, evals
+                    items, vargs, kwargs = parse_optionvalue(s[0], s[1:], gvars, evals=[True, False])
+
+                    if len(items) == 1:
+                        axes = [gvars["ax"]]
+                        funcname = "set_z"+items[0][0][0]
+                    elif len(items) == 2:
+                        axes = items[0][0]
+                        funcname = "set_z"+items[1][0][0]
                     else:
-                        UsageError("Following option needs one or two items at the left of @: %s"%yaxis_arg)
+                        UsageError("Following option needs one or two items at the left of @: %s"%zaxis_arg)
 
-                    set_zfuncs =  dict((z, getattr(gvars[ax], z)) for z in dir(gvars[ax]) if z.startswith('set_z'))
-
-                    func = set_zfuncs.get("set_z"+funcname, None)
-                    if func: 
-                        func(*rvargs, **rkwargs)
+                    for ax in axes:
+                        if hasattr(ax, funcname):
+                            getattr(ax, funcname)(*vargs, **kwargs)
+                        else:
+                            # TODO: handling this case
+                            pass
 
             # grid setting
             if self.targs.g:
@@ -251,16 +276,20 @@ class plot_task(Task):
             if self.targs.grid:
                 for grid_arg in self.targs.grid:
                     s = grid_arg.split("$")
-                    lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(s[0], s[1:], gvars)
 
-                    if rvargs or rkwargs:
-                        for ax in lvargs:
-                            ax.grid(*rvargs, **rkwargs)
-                    elif lvargs or lkwargs:
-                        gvars["ax"].grid(*lvargs, **lkwargs)
+                    # syntax: [axname[,axname...]@]funcargs
+                    # text, varmap, gvars, evals
+                    items, vargs, kwargs = parse_optionvalue(s[0], s[1:], gvars, evals=[True])
+
+                    if len(items) == 0:
+                        axes = [gvars["ax"]]
+                    elif len(items) == 1:
+                        axes = items[0][0]
                     else:
-                        gvars["ax"].grid()
+                        UsageError("The synaxt error near '@': %s"%grid_arg)
+
+                    for ax in axes:
+                        ax.grid(*vargs, **kwargs)
 
             # legend setting
             if self.targs.l:
@@ -271,35 +300,40 @@ class plot_task(Task):
             if self.targs.legend:
                 for legend_arg in self.targs.legend:
                     s = legend_arg.split("$")
-                    lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(s[0], s[1:], gvars)
 
-                    if rvargs or rkwargs:
-                        for ax in lvargs:
-                            ax.legend(*rvargs, **rkwargs)
-                    elif lvargs or lkwargs:
-                        gvars["ax"].legend(*lvargs, **lkwargs)
+                    # syntax: [axname[,axname...]@]funcargs
+                    # text, varmap, gvars, evals
+                    items, vargs, kwargs = parse_optionvalue(s[0], s[1:], gvars, evals=[True])
+
+                    if len(items) == 0:
+                        axes = [gvars["ax"]]
+                    elif len(items) == 1:
+                        axes = items[0][0]
                     else:
-                        gvars["ax"].legend()
+                        UsageError("The synaxt error near '@': %s"%legend_arg)
 
+                    for ax in axes:
+                        ax.legend(*vargs, **kwargs)
 
             # execute axes functions
             if self.targs.axes:
                 for axes_arg in self.targs.axes:
                     s = axes_arg.split("$")
-                    lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs(s[0], s[1:], gvars, left_eval=False)
+                    # syntax: [axname[, axname...]@]funcname@funcargs
+                    # text, varmap, gvars, evals
+                    items, vargs, kwargs = parse_optionvalue(s[0], s[1:], gvars, evals=[True, False])
 
-                    if len(lvargs) == 1:
-                        ax = "ax"
-                        funcname = lvargs[0]
-                    elif len(lvargs) == 2:
-                        ax = lvargs[0]
-                        funcname = lvargs[1]
+                    if len(items) == 1:
+                        axes = [gvars["ax"]]
+                        funcname = items[0][0][0]
+                    elif len(items) == 2:
+                        axes = items[0][0]
+                        funcname = items[1][0][0]
                     else:
-                        UsageError("Following option needs one or two items at the left of @: %s"%yaxis_arg)
+                        UsageError("Following option needs one or two items at the left of @: %s"%axes_arg)
 
-                    getattr(gvars[ax], funcname)(*rvargs, **rkwargs)
+                    for ax in axes:
+                        getattr(ax, funcname)(*vargs, **kwargs)
 
             elif not gvars['plots']:
                 if self.targs.figure:
@@ -317,16 +351,21 @@ class plot_task(Task):
             if self.targs.save:
                 for save_arg in self.targs.save:
                     s = save_arg.split("$")
-                    lvargs, lkwargs, rvargs, rkwargs = \
-                        parse_subargs('r'+s[0], s[1:], gvars)
+                    # savefig(fname, dpi=None, facecolor='w', edgecolor='w',
+                    # orientation='portrait', papertype=None, format=None,
+                    # transparent=False, bbox_inches=None, pad_inches=0.1,
+                    # frameon=None)
+                    # syntax: funcargs
+                    # text, varmap, gvars, evals
+                    items, vargs, kwargs = parse_optionvalue('r'+s[0], s[1:], gvars)
 
-                    name = lvargs.pop(0)
+                    name = vargs.pop(0)
 
                     if gvars['num_pages'] > 1:
                         root, ext = os.path.splitext(name)
                         name = '%s-%d%s'%(root, gvars['page_num'], ext)
 
-                    gvars["figure"].savefig(name, *lvargs, **lkwargs)
+                    gvars["figure"].savefig(name, *vargs, **kwargs)
 
             if gvars["B"]:
                 gvars["B"].savefig(figure=gvars["figure"])

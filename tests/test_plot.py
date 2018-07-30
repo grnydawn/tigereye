@@ -70,7 +70,7 @@ def test_numpy_data(tempdir):
 def test_numpy_text(tempdir):
     argv = [
         "%s"%numpy_text_data1,
-        "--data-format", "csv, sep=' ', header=None",
+        "--data-format", "csv@sep=' ', header=None",
         "-p", "plot@ D.values**2",
     ]
 
@@ -84,7 +84,7 @@ def test_csv_file(tempdir):
         "--calc", "l2=l1.astype(numpy.float)",
         "--calc", "l3=max(D)",
         "-p", "plot@ l2**(page_num+1)",
-        "--data-format", "csv, delimiter=';'",
+        "--data-format", "csv@delimiter=';'",
         "--pages", "2",
         "--pdf-bind", "'%s'"%outfile,
         #"--noplot",
@@ -118,19 +118,19 @@ def test_axis_opt(tempdir):
         "[1,2,3]", "[4,5,6]",
         "--calc", "l1=D[0].values",
         "--calc", "l2=D[1].values",
-        "--ax", "ax1@121",
-        "--ax", "ax2@122",
-        "-x", "ax1, label@'lxabel', fontsize=20",
-        "-x", "ax2, ticks@[1.5, 2.5]",
-        "-x", "ax1, ticklabels@['a', 'b']",
-        "-y", "ax2, label@'ylabel'",
-        "-y", "ax1, ticks@[4.5, 5.5]",
-        "-y", "ax2, ticklabels@['x', 'y']",
-        "--axes", "ax1, set_title@'new title'",
+        "--subplot", "ax1@121",
+        "--subplot", "ax2@122",
+        "-x", "ax1@label@'lxabel', fontsize=20",
+        "-x", "ax2@ticks@[1.5, 2.5]",
+        "-x", "ax1@ticklabels@['a', 'b']",
+        "-y", "ax2@label@'ylabel'",
+        "-y", "ax1@ticks@[4.5, 5.5]",
+        "-y", "ax2@ticklabels@['x', 'y']",
+        "--axes", "ax1@set_title@'new title'",
         "-t", "ax2@'Title'",
         "-l",
-        "-p", "ax1, plot@l1, l2, label='label'",
-        "-p", "ax2, plot@l2, l1, label='label'",
+        "-p", "ax1@plot@l1, l2, label='label'",
+        "-p", "ax2@plot@l2, l1, label='label'",
     ]
 
     _main(argv, tempdir)
@@ -144,7 +144,7 @@ def test_remote_csv(tempdir):
         "--calc", "l4=D[1]",
         "-p", "plot@ l[0].values[page_num, :]**2",
         "-t", "l4[page_num]",
-        "--data-format", "0@csv, delimiter=','",
+        "--data-format", "0@csv@delimiter=','",
         "--pages", "2",
         "--pdf-bind", "'%s'"%outfile,
         #"--noplot",
@@ -179,8 +179,8 @@ def test_3D_line(tempdir):
         "D[1]**2 + 1",
         "D[2] * numpy.sin(D[0])",
         "D[2] * numpy.cos(D[0])",
-        "--ax", "ax@ projection='3d'",
-        "-p", "ax, plot@D[3], D[4], D[2], label='parametric curve'",
+        "--subplot", "ax@ projection='3d'",
+        "-p", "ax@plot@D[3], D[4], D[2], label='parametric curve'",
         "-l",
     ]
 
@@ -220,9 +220,8 @@ def test_folding(tempdir):
     outfile = tempdir.join('test.pdf')
     argv = [
         folding_data1,
-        "--data-format", "csv, delimiter=';'",
         "--pdf-bind", "'%s'"%outfile,
-        "--data-format", "csv, delimiter=';', header=None",
+        "--data-format", "csv@delimiter=';', header=None",
         "--calc", "hwcs=D.iloc[:,2].drop_duplicates().values",
         "--pages", "len(hwcs)",
         "--page-calc", "HWC=D.loc[D.iloc[:,2]==hwcs[page_num],:]",
