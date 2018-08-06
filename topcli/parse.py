@@ -12,7 +12,7 @@ if PY3:
     import importlib
     __import__ = importlib.__import__
 
-def _read_task(targ, gvars):
+def _read_task(targ, gvars, tasks):
 
     from .entry import parse_global_opts
 
@@ -39,11 +39,11 @@ def _read_task(targ, gvars):
     if iargs and (iargs[0] in tasks.keys() or not iargs[0].startswith("-")):
         iargs.pop(0)
 
-    gargs, task_argv = parse_global_opts(iargs)
+    gargs, task_argv = parse_global_opts(iargs, tasks)
 
     # handling task commands
     imported_task_argv = []
-    for tname, targv, task_cls in teye_task_parse(task_argv, gvars):
+    for tname, targv, task_cls in task_parse(task_argv, gvars, tasks):
         task = task_cls(targv)
         if impkey is None or getattr(task.targs, impkey.strip(), False) == impvalue.strip():
             for name, value in task.targs._get_kwargs():
@@ -97,7 +97,7 @@ def _read_function(targ, gvars):
 
     return impfuncs
 
-def _import(targv, gvars):
+def _import(targv, gvars, tasks):
 
     new_targv = []
     imp_funcs = {}
@@ -108,7 +108,7 @@ def _import(targv, gvars):
     for targ in targv:
 
         if task_found:
-            new_targv.extend(_read_task(targ, gvars))
+            new_targv.extend(_read_task(targ, gvars, tasks))
             task_found = False
         elif function_found:
             imp_funcs = _read_function(targ, gvars)
@@ -138,9 +138,9 @@ def _import(targv, gvars):
 
     return new_targv, imp_funcs
 
-def _parse(targv, gvars):
+def _parse(targv, gvars, tasks):
     tname = targv[0]
-    new_targv, imp_funcs = _import(targv[1:], gvars)
+    new_targv, imp_funcs = _import(targv[1:], gvars, tasks)
 
     for k, v in imp_funcs.items():
         if k not in string.ascii_uppercase[:26]:
@@ -150,18 +150,19 @@ def _parse(targv, gvars):
 
     tcls = tasks.get(tname, None)
 
+    if tcls is None: import pdb; pdb.set_trace()
     return tname, new_targv, tcls
 
-def teye_task_parse(argv, gvars):
+def task_parse(argv, gvars, tasks):
 
     task_argv = []
     for arg in argv:
         if arg == "--":
             if task_argv:
-                yield _parse(task_argv, gvars)
+                yield _parse(task_argv, gvars, tasks)
             task_argv = []
         else:
             task_argv.append(arg)
 
     if task_argv:
-        yield _parse(task_argv, gvars)
+        yield _parse(task_argv, gvars, tasks)

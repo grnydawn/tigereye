@@ -4,7 +4,7 @@
 import os
 import argparse
 
-from topcli import Task, UsageError, teval, funcargs_eval
+from topcli import Task, UsageError, teval, funcargs_eval, parse_optionvalue
 
 class matplot_task(Task):
 
@@ -343,7 +343,7 @@ class matplot_task(Task):
                     else:
                         gvars["D"].plot()
                 else:
-                    error_exit("There is no data to plot.")
+                    raise UsageError("There is no data to plot.")
 
             # saving an image file
             if self.targs.save:

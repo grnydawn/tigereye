@@ -210,7 +210,7 @@ def test_pdf_bind(tempdir):
         "-t", "'Page-%d'%page_num",
         "--pages", "2",
         "--noshow",
-        "--", "plot",
+        "--", "matplot",
         "--import-task", "%s?name=sinplot@X=D.values, Y=numpy.linspace(1,2)"%template_sample1,
     ]
 

@@ -4,7 +4,7 @@
 import os
 import argparse
 
-from topcli import Task, UsageError, teval, funcargs_eval
+from topcli import Task, UsageError, funcargs_eval, parse_optionvalue
 
 class verify_task(Task):
 

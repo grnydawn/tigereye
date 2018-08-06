@@ -7,5 +7,5 @@ __version__ = "0.2.1"
 
 from .task import Task
 from .error import UsageError
-from .util import teval, funcargs_eval
+from .util import teval, funcargs_eval, parse_optionvalue
 from .cli import CLI

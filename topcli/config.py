@@ -4,8 +4,7 @@
 import os
 import pickle
 
-from os.path import expanduser
-home = expanduser("~")
+home = os.path.expanduser("~")
 configdir = os.path.join(home, ".topcli")
 configfile = os.path.join(configdir, "config")
 
