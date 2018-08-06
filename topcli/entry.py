@@ -13,7 +13,6 @@ try:
 except ImportError as err:
     error_exit(err)
 
-from .core_tasks import tasks
 from .load import teye_data_load
 
 default_task = 'plot'
@@ -65,7 +64,7 @@ def parse_global_opts(argv):
 
     return gargs, task_argv
 
-def teye_entry_task(argv, gvars):
+def entry_task(argv, gvars):
 
     gargs, task_argv = parse_global_opts(argv)
 

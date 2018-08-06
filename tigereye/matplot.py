@@ -4,11 +4,9 @@
 import os
 import argparse
 
-from ..task import Task
-from ..error import UsageError
-from ..util import funcargs_eval, parse_optionvalue, error_exit
+from topcli import Task, UsageError, teval, funcargs_eval
 
-class plot_task(Task):
+class matplot_task(Task):
 
     def __init__(self, targv):
 

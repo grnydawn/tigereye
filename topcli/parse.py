@@ -6,7 +6,6 @@ import imp
 import shlex
 import string
 
-from .core_tasks import tasks
 from .util import get_localpath, PY3, error_warn
 
 if PY3:
