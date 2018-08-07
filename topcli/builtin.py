@@ -26,7 +26,19 @@ class config_task(Task):
 #        self.parser.add_argument('--axes', metavar='axes', action='append', help='define Axes function.')
 #        self.parser.add_argument('--noshow', action='store_true', default=False, help='prevent showing plot on screen.')
 #        self.parser.add_argument('--noplot', action='store_true', default=False, help='prevent generating plot.')
-        self.parser.add_argument('--version', action='version', version='tigereye plotting task version 0.0.0')
+        self.parser.add_argument('--version', action='version', version='topcli config task version 0.0.0')
+
+        self.targs = self.parser.parse_args(targv)
+
+    def perform(self, gvars):
+
+        import pdb; pdb.set_trace()
+
+class export_task(Task):
+
+    def __init__(self, targv):
+
+        self.parser.add_argument('--version', action='version', version='topcli export task version 0.0.0')
 
         self.targs = self.parser.parse_args(targv)
 
@@ -36,6 +48,7 @@ class config_task(Task):
 
 builtin_tasks = {
     "config": config_task,
+    "export": export_task,
 }
 
 #    if argv:

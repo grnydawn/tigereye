@@ -21,14 +21,14 @@ def main(argv):
     def _pdf_bind_handler(headers, vargs, kwargs):
 
         from matplotlib.backends.backend_pdf import PdfPages
-        return { "B": PdfPages(*vargs, **kwargs) }
+        return { "pdf_pages": PdfPages(*vargs, **kwargs) }
 
     try:
 
         app = CLI("tigereye", description="reusable plotting command")
 
-        app.add_global_option("--pdf-bind", handler=_pdf_bind_handler, help='generate pdf binding.')
-        app.add_global_option("--version", action='version', version='tigereye version 0.3.0')
+        app.add_argument(_pdf_bind_handler, "--pdf-bind", help='generate pdf binding.')
+        app.add_argument(None, "--version", action='version', version='tigereye version 0.3.0')
 
         app.add_command("matplot", matplot_task)
         app.add_command("print", print_task)

@@ -6,11 +6,12 @@ import importlib
 
 
 from .error import InternalError, NormalExit
-from .name import Globals
+from .name import env_vars
 from .entry import entry_task
 from .parse import task_parse
 from .task import Task
 from .config import config
+from .builtin import builtin_tasks
 
 class CLI(object):
 
@@ -20,11 +21,13 @@ class CLI(object):
         self.name = appname
         self.description = description
 
-        self.global_options = []
+        env_vars["A"][self.name] = {}
 
-        self.tasks = {}
+        self.app_options = []
+
+        self.tasks = dict(builtin_tasks)
         for cmd_name, task_path in config['installed_tasks'].items():
-            task = import_task(task_path)
+            task = locate_task(task_path)
             self.add_command(cmd_name, task)
 
         self.default_command = None
@@ -33,14 +36,9 @@ class CLI(object):
 
         self.modules = {}
 
-    def add_global_option(self, *vargs, **kwargs):
+    def add_argument(self, handler, *vargs, **kwargs):
 
-        if "handler" in kwargs:
-            handler = kwargs.pop("handler")
-        else:
-            handler = None
-
-        self.global_options.append( (handler, vargs, kwargs) )
+        self.app_options.append( (handler, vargs, kwargs) )
 
     def add_command(self, cmd_name, cmd_task):
 
@@ -62,23 +60,18 @@ class CLI(object):
 
         try:
 
-            # tigereye global variables
-            gvars = Globals()
-            gvars["A"] = {} # application-specific namespace
-
             for mod_name, (alias, onfailure) in self.modules.items():
-
                 mod = importlib.import_module(mod_name)
-                gvars[mod_name.split(".")[-1]] = mod
+                env_vars["A"][self.name][mod_name.split(".")[-1]] = mod
                 if alias:
-                    gvars[alias] = mod
+                    env_vars["A"][self.name][alias] = mod
 
             # handling entry command and global options
-            newargv = entry_task(argv, self.global_options, gvars, self.tasks, self.default_command,
-                self.description)
+            newargv = entry_task(argv, self.app_options, env_vars["A"][self.name],
+                self.tasks, self.default_command, self.description)
 
             # handling task commands
-            for tname, targv, task_cls in task_parse(newargv, gvars, self.tasks):
+            for tname, targv, task_cls in task_parse(newargv, env_vars["A"][self.name], self.tasks):
 
                 if task_cls is not None:
                     task_cls(targv).run(gvars)

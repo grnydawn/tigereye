@@ -2,7 +2,6 @@
 "tigereye task module."
 
 import abc
-import string
 import argparse
 
 from .error import InternalError, UsageError
@@ -81,10 +80,7 @@ class Task(object):
                 s = output_arg.split("$")
                 vargs, kwargs = funcargs_eval(s[0], s[1:], newgvars)
                 for k, v in kwargs.items():
-                    if k not in string.ascii_uppercase[:26]:
-                        gvars[k] = v
-                    else:
-                        raise UsageError("'%s' is a reserved word."%k)
+                    gvars[k] = v
 
     @abc.abstractmethod
     def perform(self, gvars):
@@ -94,8 +90,5 @@ class Task(object):
         s = calc.split("$")
         vargs, kwargs = funcargs_eval(s[0], s[1:], gvars)
         for k, v in kwargs.items():
-            if k not in string.ascii_uppercase[:26]:
-                gvars[k] = v
-            else:
-                error_warn("'%s' is a reserved word."%k)
+            gvars[k] = v
 

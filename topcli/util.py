@@ -3,7 +3,6 @@
 
 import sys
 import os
-import string
 import tempfile
 
 from .error import UsageError
@@ -21,15 +20,20 @@ try:
     urllib_imported = True
 except ImportError as e:
     urllib_imported = False
+#
+#_builtins = {
+#    "False":    False,
+#    "len":      len,
+#    "max":      max,
+#    "min":      min,
+#    "range":    range,
+#    "True":     True,
+#}
+#
 
-_builtins = {
-    "False":    False,
-    "len":      len,
-    "max":      max,
-    "min":      min,
-    "range":    range,
-    "True":     True,
-}
+
+# may discard some builtin functions
+_builtins = dict(__builtins__)
 
 def args_pop(args, name, num_remove):
     target = []
@@ -48,18 +52,16 @@ def args_pop(args, name, num_remove):
 
     return newargs, target
 
-class teye_globals(dict):
-
-    def __init__(self, *vargs, **kwargs):
-        super(teye_globals, self).__init__(*vargs, **kwargs)
-        self['__builtins__'] = _builtins
-        for C in string.ascii_uppercase[:26]:
-            self[C] = None
-
-    def __setitem__(self, key, item):
-        if key in globals()['__builtins__']:
-            raise UsageError("builtin name, '%s', can not be overriden."%key)
-        super(teye_globals, self).__setitem__(key, item)
+#class teye_globals(dict):
+#
+#    def __init__(self, *vargs, **kwargs):
+#        super(teye_globals, self).__init__(*vargs, **kwargs)
+#        self['__builtins__'] = _builtins
+#
+#    def __setitem__(self, key, item):
+#        if key in globals()['__builtins__']:
+#            raise UsageError("builtin name, '%s', can not be overriden."%key)
+#        super(teye_globals, self).__setitem__(key, item)
 
 
 def subclasses(cls):
@@ -80,6 +82,8 @@ def teval(expr, varmaps, g, **kwargs):
 
     try:
         _g = dict(g)
+        if "__builtins__" not in _g:
+            _g["__builtins__"] = _builtins
 
         for vmap in varmaps:
             _g.update(teval('_p(%s)'%vmap, [], _g, _p=_parse))

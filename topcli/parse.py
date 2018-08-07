@@ -39,7 +39,7 @@ def _read_task(targ, gvars, tasks):
     if iargs and (iargs[0] in tasks.keys() or not iargs[0].startswith("-")):
         iargs.pop(0)
 
-    gargs, task_argv, handlers = parse_global_opts(argv, gopts, tasks, default_task, desc)
+    #gargs, task_argv, handlers = parse_global_opts(argv, gopts, tasks, default_task, desc)
     gargs, task_argv = parse_global_opts(iargs, tasks)
 
     # handling task commands
@@ -118,12 +118,7 @@ def _import(targv, gvars, tasks):
             items = targ.split("@")
             mod = __import__(items[0].strip())
             if len(items) == 2:
-
-                if items[1].strip() not in string.ascii_uppercase[:26]:
-                    gvars[k] = v
-                else:
-                    error_warn("'%s' is a reserved word."%k)
-
+                gvars[k] = v
                 gvars[items[0].strip()] = gvars[items[1].strip()] = mod
             elif len(items) == 1:
                 gvars[items[0].strip()] = mod
@@ -139,30 +134,28 @@ def _import(targv, gvars, tasks):
 
     return new_targv, imp_funcs
 
-def _parse(targv, gvars, tasks):
+def _parse(targv, app_vars, tasks):
     tname = targv[0]
-    new_targv, imp_funcs = _import(targv[1:], gvars, tasks)
+    new_targv, imp_funcs = _import(targv[1:], app_vars, tasks)
 
     for k, v in imp_funcs.items():
-        if k not in string.ascii_uppercase[:26]:
-            gvars[k] = v
-        else:
-            error_warn("'%s' is a reserved word."%k)
+        env_vars["T"]
+        gvars[k] = v
 
     tcls = tasks.get(tname, None)
 
     return tname, new_targv, tcls
 
-def task_parse(argv, gvars, tasks):
+def task_parse(argv, app_vars, tasks):
 
     task_argv = []
     for arg in argv:
         if arg == "--":
             if task_argv:
-                yield _parse(task_argv, gvars, tasks)
+                yield _parse(task_argv, app_vars, tasks)
             task_argv = []
         else:
             task_argv.append(arg)
 
     if task_argv:
-        yield _parse(task_argv, gvars, tasks)
+        yield _parse(task_argv, app_vars, tasks)
