@@ -66,9 +66,9 @@ def subclasses(cls):
     return set(cls.__subclasses__()).union(
         [s for c in cls.__subclasses__() for s in _subclasses(c)])
 
-def error_exit(exc):
-    print("ERROR: %s"%str(exc))
-    sys.exit(-1)
+#def error_exit(exc):
+#    print("ERROR: %s"%str(exc))
+#    sys.exit(-1)
 
 def error_warn(exc):
     print("WARNING: %s"%str(exc))

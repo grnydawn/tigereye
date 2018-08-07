@@ -39,6 +39,7 @@ def _read_task(targ, gvars, tasks):
     if iargs and (iargs[0] in tasks.keys() or not iargs[0].startswith("-")):
         iargs.pop(0)
 
+    gargs, task_argv, handlers = parse_global_opts(argv, gopts, tasks, default_task, desc)
     gargs, task_argv = parse_global_opts(iargs, tasks)
 
     # handling task commands
@@ -150,7 +151,6 @@ def _parse(targv, gvars, tasks):
 
     tcls = tasks.get(tname, None)
 
-    if tcls is None: import pdb; pdb.set_trace()
     return tname, new_targv, tcls
 
 def task_parse(argv, gvars, tasks):

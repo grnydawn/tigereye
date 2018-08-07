@@ -14,7 +14,7 @@ class Task(object):
 
     def __new__(cls, targv):
 
-        parser = argparse.ArgumentParser(description='tigereye %s'%cls.__name__)
+        parser = argparse.ArgumentParser(description='topcli %s'%cls.__name__)
 
         parser.add_argument('--import-task', metavar='task', action='append', help='import task')
         parser.add_argument('--import-function', metavar='function', action='append', help='import function')

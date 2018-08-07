@@ -41,7 +41,7 @@ def test_array_in_cmdline(tempdir):
     argv = [
         "[[1,2,3], [1,4,9]]", "[4,5,6]",
         "--calc", "l1=D[1]",
-        "--calc", "l2=D[0].loc[0]*D[0].loc[1]",
+        "--calc", "l2=D[0][1]",
         "-t", "'test', fontsize=24",
         "-x", "label@'xlabel'",
         "-x", "ticks@l1",
@@ -60,8 +60,8 @@ def test_numpy_data(tempdir):
         "-x", "label@'xlabel'",
         "-x", "ticklabels@['a', 'b', 'c']",
         "-y", "label@'ylabel'",
-        "-p", "scatter@ D[0].values, D[1].values, label='s'",
-        "-p", "scatter@ D[1].values, D[0].values, label='t'",
+        "-p", "scatter@ D[0], D[1], label='s'",
+        "-p", "scatter@ D[1], D[0], label='t'",
         "-l",
     ]
 
@@ -69,9 +69,8 @@ def test_numpy_data(tempdir):
 
 def test_numpy_text(tempdir):
     argv = [
-        "%s"%numpy_text_data1,
-        "--data-format", "csv@sep=' ', header=None",
-        "-p", "plot@ D.values**2",
+        "numpy.genfromtxt('%s', delimiter=' ')"%numpy_text_data1,
+        "-p", "plot@ D[0]**2",
     ]
 
     _main(argv, tempdir)
@@ -79,12 +78,11 @@ def test_numpy_text(tempdir):
 def test_csv_file(tempdir):
     outfile = tempdir.join('test.pdf')
     argv = [
-        csv_text_data1,
-        "--calc", "l1=D.values",
+        "pandas.load_csv('%s', delimiter=';'"%csv_text_data1,
+        "--calc", "l1=D[0].values",
         "--calc", "l2=l1.astype(numpy.float)",
-        "--calc", "l3=max(D)",
+        "--calc", "l3=max(D[0])",
         "-p", "plot@ l2**(page_num+1)",
-        "--data-format", "csv@delimiter=';'",
         "--pages", "2",
         "--pdf-bind", "'%s'"%outfile,
         #"--noplot",
@@ -96,8 +94,8 @@ def test_csv_file(tempdir):
 def test_axis_opt(tempdir):
     argv = [
         "[1,2,3]", "[4,5,6]",
-        "--calc", "l1=D[0].values",
-        "--calc", "l2=D[1].values",
+        "--calc", "l1=D[0]",
+        "--calc", "l2=D[1]",
         "-x", "label@'xlabel', fontsize=20",
         "-x", "ticks@[1.5, 2.5]",
         "-x", "ticklabels@['a', 'b']",
@@ -116,8 +114,8 @@ def test_axis_opt(tempdir):
 def test_axis_opt(tempdir):
     argv = [
         "[1,2,3]", "[4,5,6]",
-        "--calc", "l1=D[0].values",
-        "--calc", "l2=D[1].values",
+        "--calc", "l1=D[0]",
+        "--calc", "l2=D[1]",
         "--subplot", "ax1@121",
         "--subplot", "ax2@122",
         "-x", "ax1@label@'lxabel', fontsize=20",
@@ -138,13 +136,12 @@ def test_axis_opt(tempdir):
 def test_remote_csv(tempdir):
     outfile = tempdir.join('test.pdf')
     argv = [
-        remote_csv_data1, "['Page1', 'Page2']",
+        "pandas.read_csv('%s', delimiter=',')"%remote_csv_data1, "['Page1', 'Page2']",
         "--calc", "l=D",
         "--calc", "l3=D[0].values",
         "--calc", "l4=D[1]",
         "-p", "plot@ l[0].values[page_num, :]**2",
         "-t", "l4[page_num]",
-        "--data-format", "0@csv@delimiter=','",
         "--pages", "2",
         "--pdf-bind", "'%s'"%outfile,
         #"--noplot",
@@ -155,8 +152,8 @@ def test_remote_csv(tempdir):
 def test_template1(tempdir):
     argv = [
         "numpy.linspace(0, 2*numpy.pi)",
-        "numpy.sin(D[0].values)",
-        "--import-task", "%s?name=sinplot@X=D[0].values, Y=D[1].values"%template_sample1,
+        "numpy.sin(D[0])",
+        "--import-task", "%s?name=sinplot@X=D[0], Y=D[1]"%template_sample1,
         "-t", "'My Plot'",
     ]
 
@@ -166,7 +163,7 @@ def test_template1(tempdir):
 def test_figure_text(tempdir):
     argv = [
         "[0.5, 0.5]",
-        "--figure", "text@ D[0], D[1], 'Hello World!'",
+        "--figure", "text@ D[0][0], D[0][1], 'Hello World!'",
         #"--figure", "text@ 0.5, 0.5, 'Hello World!'",
     ]
 
@@ -190,8 +187,8 @@ def test_page_calc(tempdir):
     outfile = tempdir.join('test.pdf')
     argv = [
         "numpy.linspace(0, 1)",
-        "-p", "plot@D.values, j",
-        "--page-calc", "j=D.values*10+page_num",
+        "-p", "plot@D[0], j",
+        "--page-calc", "j=D[0]*10+page_num",
         "-t", "'Page-%d'%page_num",
         "--pages", "2",
         "--pdf-bind", "'%s'"%outfile,
@@ -205,13 +202,13 @@ def test_pdf_bind(tempdir):
     argv = [
         "numpy.linspace(0, 1)",
         "--pdf-bind", "'%s'"%outfile,
-        "-p", "plot@D.values, j",
-        "--page-calc", "j=D.values*10+page_num",
+        "-p", "plot@D[0], j",
+        "--page-calc", "j=D[0]*10+page_num",
         "-t", "'Page-%d'%page_num",
         "--pages", "2",
         "--noshow",
         "--", "matplot",
-        "--import-task", "%s?name=sinplot@X=D.values, Y=numpy.linspace(1,2)"%template_sample1,
+        "--import-task", "%s?name=sinplot@X=D, Y=numpy.linspace(1,2)"%template_sample1,
     ]
 
     _main(argv, tempdir)
@@ -219,12 +216,11 @@ def test_pdf_bind(tempdir):
 def test_folding(tempdir):
     outfile = tempdir.join('test.pdf')
     argv = [
-        folding_data1,
+        "pandas.read_csv('%s', delimiter=';', header=None)"%folding_data1,
         "--pdf-bind", "'%s'"%outfile,
-        "--data-format", "csv@delimiter=';', header=None",
-        "--calc", "hwcs=D.iloc[:,2].drop_duplicates().values",
+        "--calc", "hwcs=D[0].iloc[:,2].drop_duplicates().values",
         "--pages", "len(hwcs)",
-        "--page-calc", "HWC=D.loc[D.iloc[:,2]==hwcs[page_num],:]",
+        "--page-calc", "HWC=D[0].loc[D[0].iloc[:,2]==hwcs[page_num],:]",
         "-p", "plot@HWC.iloc[:,3].values, HWC.iloc[:,4].values",
         "-t", "hwcs[page_num]",
         "-x", "label@'elapsed time(0: start, 1: end)'",

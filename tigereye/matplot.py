@@ -336,12 +336,9 @@ class matplot_task(Task):
             elif not gvars['plots']:
                 if self.targs.figure:
                     pass
-                elif gvars["D"] is not None:
-                    if isinstance(gvars["D"], list):
-                        for data_obj in gvars['D']:
-                            data_obj.plot()
-                    else:
-                        gvars["D"].plot()
+                elif gvars["D"]:
+                    for d in gvars["D"]:
+                        gvars["ax"].plot(d)
                 else:
                     raise UsageError("There is no data to plot.")
 

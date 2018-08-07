@@ -214,9 +214,6 @@ class print_task(Task):
                 for varg in vargs:
                     _print(varg)
         elif not printed:
-            if isinstance(gvars["D"], list):
-                for d in gvars["D"]:
-                    _print(d)
-            elif gvars["D"] is not None:
-                _print(gvars["D"])
+            for d in gvars["D"]:
+                _print(d)
 

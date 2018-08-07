@@ -64,6 +64,7 @@ class CLI(object):
 
             # tigereye global variables
             gvars = Globals()
+            gvars["A"] = {} # application-specific namespace
 
             for mod_name, (alias, onfailure) in self.modules.items():
 
@@ -97,7 +98,7 @@ class CLI(object):
             return out.retcode
 
         except ImportError as err:
-            
+
             if onfailure:
                 onfailure()
 

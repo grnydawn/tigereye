@@ -5,33 +5,8 @@ import argparse
 import string
 
 from .error import UsageError
-from .util import error_exit, parse_optionvalue
-#from .load import teye_data_load
-
-def handle_global_options(gargs, handlers, gvars):
-
-    # handle builtin commands
-    #if gargs.command and gargs.command in :
-
-    # handle data argument 
-    #if gargs.data:
-
-    # handle user-provided options
-
-    for cmd_name, handler in handlers.items():
-       if handler and hasattr(gargs, cmd_name):
-            optval = getattr(gargs, cmd_name)
-            if optval: 
-
-                s = optval.split("$")
-                items, vargs, kwargs = parse_optionvalue('r'+s[0], s[1:], gvars)
-
-                out = handler(items, vargs, kwargs)
-                for k, v in out.items():
-                    if k not in string.ascii_uppercase[:26]:
-                        gvars[k] = v
-                    else:
-                        raise UsageError("ERROR: reserved word of '%s' is used in a global option handler."%k)
+from .util import teval, parse_optionvalue
+from .builtin import builtin_tasks
 
 def parse_global_opts(argv, gopts, tasks, default_task, desc):
 
@@ -69,7 +44,7 @@ def parse_global_opts(argv, gopts, tasks, default_task, desc):
         gargs.command = None
     else:
         first_task = default_task
-    
+
     # recover task options if any
     #if gargs.data[0] in tasks.keys():
     #    first_task = gargs.data.pop(0)
@@ -85,8 +60,31 @@ def entry_task(argv, gopts, gvars, tasks, default_task, desc):
 
     gargs, task_argv, handlers = parse_global_opts(argv, gopts, tasks, default_task, desc)
 
-    # handling remaining global options
-    handle_global_options(gargs, handlers, gvars)
+    # handle builtin commands
+    if gargs.command and gargs.command in builtin_tasks:
+        import pdb; pdb.set_trace()
+
+    # handle data argument 
+
+    if gargs.data:
+        gvars["D"] = []
+        for d in gargs.data:
+            s = d.split("$")
+            gvars["D"].append(teval(s[0], s[1:], gvars))
+
+    # handle user-provided options
+
+    for opt_name, handler in handlers.items():
+       if handler and hasattr(gargs, opt_name):
+            optval = getattr(gargs, opt_name)
+            if optval:
+
+                s = optval.split("$")
+                items, vargs, kwargs = parse_optionvalue('r'+s[0], s[1:], gvars)
+
+                out = handler(items, vargs, kwargs)
+                for k, v in out.items():
+                    gvars["A"][k] = v
 
     # load inputs
     #teye_data_load(gargs, gvars)
